@@ -1,9 +1,10 @@
+\documentclass[12pt]{article}
 \input{template/preample.tex}
 \usepackage{natbib}
 
 \title{
     \vspace{5cm}
-    \Large{\textsc{TITLE GOES HERE}}
+    \Large{\textsc{Project proposal}}
     \linebreak
     \Large{Deep Learning for Visual Recognition}
 }
@@ -14,7 +15,19 @@
 % \tableofcontents
 % \newpage
 % \onehalfspacing.
-\input{./sections/section.tex}
+
+\textbf{Idea:} Use object detector from lab 3 as base line model. Its pretty simple so we can change some stuff (loss function, the architecture etc.) to try and optimize it. Metrics of interest could be: Time to train to accuracy threshold, accuracy, model simplicity (able to run on small machine).
+
+\textbf{General approach:} Implement baseline model (in pytorch). Perform experiments to try and improve the model. 
+
+Keywords:
+\begin{itemize}
+	\item Code object detector 
+	\item simple data set
+	\item Try to change loss function
+	\item try to add residual connections
+	\item mean average precision
+\end{itemize}
 
 % \newpage
 % \bibliographystyle{unsrt}
