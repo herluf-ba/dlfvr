@@ -17,7 +17,7 @@
 \usepackage{graphicx}
 \usepackage{natbib}
 \usepackage{doi}
-
+\setcounter{secnumdepth}{0}
 % ---------------------------------------------------------------------------
 % TITLE DEFINITION
 % ---------------------------------------------------------------------------
@@ -48,17 +48,13 @@
 \begin{document}
 \maketitle
 
-\subheading{Purpose}
-The purpose of the project is to experiment with how a simple baseline model for object detection can be improved through a series of experiments. 
-
-The goal is not to effectively solve the problem of object detection but rather gain insight and understanding of why different changes have the outcome they have. We believe this is easier done if the experiments are carried out on a simple model which we can ourselves grasp and gradually increase the complexity of; opposed to a complex pre-trained model. 
-
+The purpose of the project is to experiment with how a simple baseline model for object detection can be improved. 
+The goal is not to effectively solve the problem of object detection but rather gain insight and understanding of why different changes have the outcome they have. We believe this is easier done if experiments are first carried out on a simple model and which can then gradually be made more complex. 
 Therefore as a baseline model, we plan to employ the simple model presented in \href{https://github.com/klaverhenrik/Deep-Learing-for-Visual-Recognition-2022/blob/main/Lab3_FunWithMNIST.ipynb}{Lab 3}, which is a naive implementation inspired by the YOLO architecture \citep{YOLO}.
 
-
-\subheading{Task & Dataset}
+\subsection{Task \& Dataset}
 For the object detection task we have chosen digit detection using the \href{http://ufldl.stanford.edu/housenumbers/}{Street View House Number Dataset (SVHN)}. The main advantages of this dataset is that it is easily available, of good quality and of reasonable size, while being small enough to feasibly train models on the hardware available to us.
-\subheading{Experiments}
+\subsection{Experiments}
 At the time of writing we plan to experiment with:
 \begin{itemize}
 \item Using different loss functions. This is motivated by the fact that object detection consist of both regression, when finding a bounding box, and classification. The naive model uses only mean squared error loss, even though it is unsuited for classification tasks. We expect that this change will make the model converge faster during training.
@@ -76,7 +72,7 @@ To compare the base model with a modified model during a particular experiment, 
 	\item Investigate confusion matrices to detect misclassification trends
 \end{itemize}
 
-\subheading{Plan}
+\subsection{Plan}
 We plan to implement our project using the \href{https://pytorch.org/}{pytorch} API, as it allows for the granular level of tweaking that we want to pursue. We plan to begin working on these steps first:
 \begin{enumerate}
 	\item Implementing and training the base model in pytorch
