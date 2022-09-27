@@ -52,7 +52,7 @@ For our course project we propose to take an experimental approach to improving 
 
 \subheading{Task & Dataset}
 For the object detection task we have chosen digit detection using the \href{http://ufldl.stanford.edu/housenumbers/}{Street View House Number Dataset (SVHN)}. The main advantages of this dataset is that it is easily available, of good quality and of reasonable size, while being small enough to feasibly train models on the hardware available to us.
-
+\subheading{Experiments}
 At the time of writing we plan to experiment with:
 \begin{itemize}
 \item Using different loss functions. This is motivated by the fact that object detection consist of both regression, when finding a bounding box, and classification. The naive model uses only mean squared error loss, even though it is unsuited for classification tasks. We expect that this change will make the model converge faster during training.
