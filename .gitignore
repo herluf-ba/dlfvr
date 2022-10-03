@@ -1,5 +1,11 @@
 notes/*
 exercises/*
+bin
+data
+include
+lib
+share
+pyvenv.cfg
 
 .DS_Store
 
