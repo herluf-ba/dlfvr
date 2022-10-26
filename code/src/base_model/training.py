@@ -4,11 +4,8 @@
 
 def loss_batch(model, loss_func, xb, yb, opt=None):
     print(xb.shape, yb.shape)
-    exit()
-    joemama = model.forward(xb)
-    print(joemama.shape)
-    exit()
-    loss = loss_func(joemama, yb)
+    prediction = model.forward(xb)
+    loss = loss_func(prediction, yb)
 
     if opt is not None:
         loss.backward()

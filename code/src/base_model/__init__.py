@@ -10,6 +10,7 @@ TODO:
 
 # Inspired by: https://pytorch.org/tutorials/beginner/nn_tutorial.html#nn-sequential
 class BaseModel(nn.Module):
+
     def __init__(self):
         super().__init__()
 
@@ -81,6 +82,17 @@ class BaseModel(nn.Module):
             nn.Softmax(dim=0))
 
     def forward(self, x):
+        print(f"{x.shape=}")
         enc = self.encoded(x)
+        print(f"{enc.shape=}")
+
+        confidence = self.confidence(enc)
+        print(f"{confidence.shape=}")
+        bounding_box = self.bounding_box(enc)
+        print(f"{bounding_box.shape=}")
+        classes = self.classes(enc)
+        print(f"{classes.shape=}")
+
         return t.cat(
-            (self.confidence(enc), self.bounding_box(enc), self.classes(enc)))
+            (self.confidence(enc), self.bounding_box(enc), self.classes(enc)),
+            dim=1)
