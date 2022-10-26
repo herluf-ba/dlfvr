@@ -1,5 +1,6 @@
-# TODO: these functions might end up being reusable. 
-# Find a way to move them somewhere else if necessray. 
+# TODO: these functions might end up being reusable.
+# Find a way to move them somewhere else if necessray.
+
 
 def loss_batch(model, loss_func, xb, yb, opt=None):
     print(xb.shape, yb.shape)
@@ -16,8 +17,9 @@ def loss_batch(model, loss_func, xb, yb, opt=None):
 
     return loss.item(), len(xb)
 
-    # Stolen from the above mentioned tutorial - TODO: store somewhere 
+    # Stolen from the above mentioned tutorial - TODO: store somewhere
     # as a general function for training
+
 
 def fit(model, epochs, loss_func, opt, train_dl, valid_dl):
     for epoch in range(epochs):
@@ -28,9 +30,7 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl):
         model.eval()
         with torch.no_grad():
             losses, nums = zip(
-                *[loss_batch(model, loss_func, xb, yb) for xb, yb in valid_dl]
-            )
+                *[loss_batch(model, loss_func, xb, yb) for xb, yb in valid_dl])
         val_loss = np.sum(np.multiply(losses, nums)) / np.sum(nums)
 
         print(epoch, val_loss)
-
