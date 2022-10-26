@@ -10,6 +10,8 @@ pyvenv.cfg
 
 .DS_Store
 
+.datasets/
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
