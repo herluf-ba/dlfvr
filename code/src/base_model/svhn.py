@@ -26,13 +26,12 @@ class SVHN(Dataset):
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
         image = read_image(img_path)
-        label = self.img_labels.loc[self.img_labels["FileName"] == str(idx +
-                                                                       1) +
-                                    ".png"]
-
+        labels = self.img_labels.loc[self.img_labels["FileName"] == str(idx +
+                                                                        1) +
+                                     ".png"].to_numpy()[:, 1:]
         if self.transform:
             image = self.transform(image)
         if self.target_transform:
-            label = self.target_transform(label)
+            labels = self.target_transform(labels)
 
-        return image, label
+        return image, labels
