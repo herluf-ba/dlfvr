@@ -25,7 +25,7 @@ class SVHN(Dataset):
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
-        image = read_image(img_path)
+        image = read_image(img_path) / 255
         labels = self.img_labels.loc[self.img_labels["FileName"] == str(idx +
                                                                         1) +
                                      ".png"].to_numpy()[:, 1:]
@@ -33,5 +33,6 @@ class SVHN(Dataset):
             image = self.transform(image)
         if self.target_transform:
             labels = self.target_transform(labels)
+        print(f"{image / 255}")
 
         return image, labels

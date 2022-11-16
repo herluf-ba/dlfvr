@@ -95,4 +95,4 @@ class BaseModel(nn.Module):
 
         return t.cat(
             (self.confidence(enc), self.bounding_box(enc), self.classes(enc)),
-            dim=1)
+            dim=0)

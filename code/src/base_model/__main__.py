@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from svhn import SVHN
 import torch.nn.functional as F
 from training import fit
-from torchvision.transforms import Compose, ToTensor, Grayscale, Resize
+from torchvision.transforms import Compose, Grayscale, Resize
 
 from __init__ import BaseModel
 
@@ -16,16 +16,19 @@ momentum = 0.9
 epochs = 10
 loss_func = F.mse_loss
 
+S = 2
 # Transform input images
-transform = Compose([Grayscale(), Resize((64, 64)), ToTensor()])
+transform = Compose([
+    Grayscale(),
+    Resize((32 * S, 32 * S)),
+])
+svhn_train = SVHN(train=True, transform=transform)
 
-svhn_train = SVHN(train=True)
-
-for img, label in svhn_train:
-    plt.imshow(img.numpy().transpose([1, 2, 0]))
-    print(f"{label=}")
-    plt.show()
-    break
+# for img, label in svhn_train:
+#     plt.imshow(img.numpy().transpose([1, 2, 0]))
+#     print(f"{label=}")
+#     plt.show()
+#     break
 
 # svhn_train = SVHN(root=os.path.join(os.getcwd(), "..", "datasets"),
 # split="train",
@@ -37,16 +40,15 @@ for img, label in svhn_train:
 # transform=transform)
 
 # TODO: Use SVHN data set here
-train = DataLoader(svhn_train, batch_size=batch_size)
-test = DataLoader(svhn_train)
+# train = DataLoader(svhn_train, batch_size=batch_size)
+# test = DataLoader(svhn_train)
 
-X, y = svhn_train[0]
-print(f"{y.shape=}")
+img, y = svhn_train[0]
 
 model = BaseModel()
-opt = t.optim.SGD(model.parameters(), lr=learning_rate,
-                  momentum=momentum)  # Stochastic Gradient Descent
+# opt = t.optim.SGD(model.parameters(), lr=learning_rate,
+#                   momentum=momentum)  # Stochastic Gradient Descent
 
-fit(model, epochs, loss_func, opt, train, test)
+# fit(model, epochs, loss_func, opt, train, test)
 
 print(f"{model.forward(img).shape=}")
