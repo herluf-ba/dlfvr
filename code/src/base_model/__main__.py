@@ -21,8 +21,17 @@ transform = Compose([
 ])
 
 
-def target_transform(_labels):
-    return t.rand((15, 2, 2))
+def target_transform(labels):
+    print(f"{labels}")
+    if len(labels) > 4:
+        print(f"OH NOOOOO there are too many labels: {labels}")
+
+    ## labels format, [(top, height, left, width)]
+    out = t.zeros((15, 2, 2))
+    for i in range(4):
+        cell_center = (0, 0)
+
+    return out
 
 
 svhn_train = SVHN(split='train',
