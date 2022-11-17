@@ -16,14 +16,26 @@ def loss_batch(model, loss_func, xb, yb, opt=None):
 
 
 def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device):
-    batch_count = len(train_dl)
 
+    # Function in function? Mmmmm delicious spaghetti!
+    def score(dl):
+        losses, nums = zip(*[
+            loss_batch(model, loss_func, xb.to(device), yb.to(device))
+            for _, (xb, yb) in enumerate(dl)
+            ])
+
+        return np.sum(np.multiply(losses, nums)) / np.sum(nums)
+
+    batch_count = len(train_dl)
+    train_loss_hist = []
+    val_loss_hist = []
     for epoch in range(epochs):
+        epoch_prefix = f"Epoch: {epoch} / {epochs}"
         model.train()
         for batch_i, (xb, yb) in enumerate(train_dl):
             printProgressBar(batch_i,
                              batch_count,
-                             prefix=f"Epoch: {epoch} / {epochs}")
+                             prefix=epoch_prefix)
             xb, yb = xb.to(device), yb.to(device)
             loss_batch(model, loss_func, xb, yb, opt)
             if (batch_i > 10):
@@ -31,14 +43,14 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device):
 
         printProgressBar(batch_count,
                          batch_count,
-                         prefix=f"Epoch: {epoch} / {epochs}")
+                         prefix=epoch_prefix)
 
         model.eval()
         with t.no_grad():
-            losses, nums = zip(*[
-                loss_batch(model, loss_func, xb.to(device), yb.to(device))
-                for _, (xb, yb) in enumerate(valid_dl)
-            ])
-        val_loss = np.sum(np.multiply(losses, nums)) / np.sum(nums)
+            print('Scoring model')
+            val_loss, train_loss = score(valid_dl), score(train_dl)
+            train_loss_hist.append(train_loss)
+            val_loss_hist.append(val_loss)
+        print(f"{val_loss=} {train_loss=}")
 
-        print(f"validation loss: {val_loss}")
+    return train_loss_hist, val_loss_hist
