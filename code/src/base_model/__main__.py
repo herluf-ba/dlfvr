@@ -1,3 +1,4 @@
+import sys 
 import torch
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
@@ -9,12 +10,12 @@ from display import plot_loss_history
 from training import fit
 from __init__ import BaseModel
 
+# Hyper Params
 batch_size = 64
 learning_rate = 0.001
 momentum = 0.9
-epochs = 100
+epochs = 20
 loss_func = F.mse_loss
-
 S = 2
 
 
@@ -29,8 +30,8 @@ def squared_distance(p1, p2):
 
 # TODO: Move this bad boy somewhere else. 
 def target_transform(img_size, labels):
-    if len(labels) > 4:
-        print(f"OH NOOOOO there are too many labels: {labels}")
+    # stfu computer if len(labels) > 4:
+    #    print(f"OH NOOOOO there are too many labels: {labels}")
 
     out = torch.zeros((15, 2, 2))
 
@@ -74,22 +75,35 @@ transform = Compose([
     Resize((32 * S, 32 * S)),
 ])
 
-svhn_train = SVHN(split='train',
+mode = None if len(sys.argv) == 1 else sys.argv[1]
+train_split, test_split = (f'{mode}_train', f'{mode}_test') if mode is not None else ('train', 'test')
+
+
+svhn_train = SVHN(split=train_split,
                   transform=transform,
                   target_transform=target_transform)
 
-svhn_dev = SVHN(split='dev',
-                transform=transform,
-                target_transform=target_transform)
+svhn_test = SVHN(split=test_split, 
+                 transform=transform, 
+                 target_transform=target_transform)
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu') 
-train = DataLoader(svhn_dev, batch_size=batch_size)
-dev = DataLoader(svhn_dev)
+
+train = DataLoader(svhn_train, batch_size=batch_size)
+test = DataLoader(svhn_test)
 
 # Setup model & move to gpu if available
 model = BaseModel().to(device)
 opt = torch.optim.SGD(model.parameters(), lr=learning_rate,
                       momentum=momentum)  
-train_loss_hist, val_loss_hist = fit(model, epochs, loss_func, opt, train, dev, device)
+
+train_loss_hist, val_loss_hist = fit(model, 
+                                     epochs, 
+                                     loss_func, 
+                                     opt, 
+                                     train, 
+                                     test, 
+                                     device)
+
 plot_loss_history(train_loss_hist, val_loss_hist)
 

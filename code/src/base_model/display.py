@@ -60,6 +60,6 @@ def plot_img(image, labels):
 def plot_loss_history(train_loss_hist, val_loss_hist): 
     epochs = list(range(len(train_loss_hist)))
     print('plotting', train_loss_hist, val_loss_hist)
-    plt.plot(epochs, train_loss_hist) 
-    plt.plot(epochs, val_loss_hist)
+    plt.plot(epochs, train_loss_hist, label='Training loss') 
+    plt.plot(epochs, val_loss_hist, label='Validation loss')
     plt.show()

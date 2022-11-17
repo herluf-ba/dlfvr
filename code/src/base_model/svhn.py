@@ -4,27 +4,44 @@ import pandas as pd
 from torch.utils.data import Dataset
 from torchvision.io import read_image
 
-
 class SVHN(Dataset):
+
+    splits = {
+            'test': {
+                'start': 30402, 
+                'end': 33402
+                }, 
+            'train': {
+                'start': 0, 
+                'end': 30401
+                }, 
+            'develop_train': {
+                'start': 0, 
+                'end': 999 
+                },
+            'develop_test': {
+                'start': 100, 
+                'end': 1500
+                }
+            }
 
     def __init__(self, split="train", transform=None, target_transform=None):
         self.transform = transform
         self.target_transform = target_transform
         self.split = split
+        
+        assert split in self.splits.keys(), f"ERROR ERROR ERROR! NO SUCH SPLIT '{split}'. Fuck you."
 
-        if split == 'test':
-            print("JK we aint got no test data")
-            exit()
-
-        data_path = 'train' if split == 'dev' else split
+        data_path = 'train'
         self.img_dir = os.path.join("datasets", data_path)
         self.img_labels = pd.read_csv(os.path.join(self.img_dir, "bbox.csv"))
 
     def __len__(self):
-        # TODO: maybe dont hardcode this
-        return 1000 if self.split == 'dev' else 33402
+        partition = self.splits[self.split]
+        return partition['end'] - partition['start']
 
     def __getitem__(self, idx):
+        idx += self.splits[self.split]['start']        
 
         # Get and transform image
         image_name = str(idx + 1) + '.png'
@@ -37,9 +54,5 @@ class SVHN(Dataset):
         labels = self.img_labels.loc[label_mask].to_numpy()[:, 1:]
         transformed_labels = self.target_transform(
             image.shape[1:], labels) if self.target_transform else labels
-
-        # print(f"{idx=}")
-        # plot_img_vanilla(image, labels)
-        # plot_img(transformed_image, transformed_labels)
 
         return transformed_image, transformed_labels

@@ -38,8 +38,6 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device):
                              prefix=epoch_prefix)
             xb, yb = xb.to(device), yb.to(device)
             loss_batch(model, loss_func, xb, yb, opt)
-            if (batch_i > 10):
-                break
 
         printProgressBar(batch_count,
                          batch_count,
@@ -47,8 +45,11 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device):
 
         model.eval()
         with t.no_grad():
-            print('Scoring model')
-            val_loss, train_loss = score(valid_dl), score(train_dl)
+            print('Calculating validation loss')
+            val_loss= score(valid_dl)
+            print('Calculating training loss ')
+            train_loss = score(train_dl)
+
             train_loss_hist.append(train_loss)
             val_loss_hist.append(val_loss)
         print(f"{val_loss=} {train_loss=}")
