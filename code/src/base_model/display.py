@@ -2,20 +2,34 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 
+class bcolors:
+    HEADER = '\033[95m'
+    BG = '\033[30m'
+    OKBLUE = '\033[94m'
+    PURPLE = '\033[35m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 def printProgressBar(iteration,
                      total,
                      prefix='',
                      suffix='',
                      decimals=1,
-                     length=100,
+                     length=50,
                      fill='━',
                      printEnd="\r"):
     '''Print iterations progress'''
     percent = ("{0:." + str(decimals) + "f}").format(
         100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
-    bar = fill * filledLength + ' ' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
+    bar = f"{bcolors.PURPLE}{fill * filledLength}{bcolors.BG}{'━' * (length - filledLength)}{bcolors.ENDC}"
+    print(f'\r {prefix} {bar} {percent}% {suffix}', end=printEnd)
     # Print New Line on Complete
     if iteration == total:
         print()
