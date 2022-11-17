@@ -1,7 +1,4 @@
-import os
-from matplotlib import pyplot as plt
 import torch as t
-import numpy as np
 from torch.utils.data import DataLoader
 from svhn import SVHN
 import torch.nn.functional as F
@@ -22,33 +19,28 @@ transform = Compose([
     Grayscale(),
     Resize((32 * S, 32 * S)),
 ])
-svhn_train = SVHN(train=True, transform=transform)
 
-# for img, label in svhn_train:
-#     plt.imshow(img.numpy().transpose([1, 2, 0]))
-#     print(f"{label=}")
-#     plt.show()
-#     break
 
-# svhn_train = SVHN(root=os.path.join(os.getcwd(), "..", "datasets"),
-# split="train",
-# download=True,
-# transform=transform)
-# svhn_test = SVHN(root=os.path.join(os.getcwd(), "..", "datasets"),
-# split="test",
-# download=True,
-# transform=transform)
+def target_transform(_labels):
+    return t.rand((15, 2, 2))
 
-# TODO: Use SVHN data set here
-# train = DataLoader(svhn_train, batch_size=batch_size)
-# test = DataLoader(svhn_train)
+
+svhn_train = SVHN(split='train',
+                  transform=transform,
+                  target_transform=target_transform)
+svhn_dev = SVHN(split='dev',
+                transform=transform,
+                target_transform=target_transform)
+
+train = DataLoader(svhn_train, batch_size=batch_size)
+dev = DataLoader(svhn_dev)
 
 img, y = svhn_train[0]
 
 model = BaseModel()
-# opt = t.optim.SGD(model.parameters(), lr=learning_rate,
-#                   momentum=momentum)  # Stochastic Gradient Descent
+opt = t.optim.SGD(model.parameters(), lr=learning_rate,
+                  momentum=momentum)  # Stochastic Gradient Descent
 
-# fit(model, epochs, loss_func, opt, train, test)
+fit(model, epochs, loss_func, opt, train, dev)
 
-print(f"{model.forward(img).shape=}")
+# print(f"{model.forward().shape=}")
