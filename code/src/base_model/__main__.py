@@ -1,4 +1,4 @@
-import sys 
+import argparse
 import torch
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
@@ -10,15 +10,8 @@ from display import plot_loss_history
 from training import fit
 from __init__ import BaseModel
 
-# Hyper Params
-batch_size = 64
-learning_rate = 0.001
-momentum = 0.9
-epochs = 20
 loss_func = F.mse_loss
 S = 2
-
-
 
 def into_resized(original, p):
     return (p[0] / original[0] * 32 * S, p[1] / original[1] * 32 * S)
@@ -69,14 +62,30 @@ def target_transform(img_size, labels):
     return out
 
 
-# Setup dataloaders 
+# Setup argument parser
+argparser = argparse.ArgumentParser(description = 'Model based on lab3 simple yolo implementation') 
+argparser.add_argument("-sp", "--split", help = "Controls which split is used.", default=None)
+argparser.add_argument("-l", "--load", help = "Path to a saved state dictionary the model should be initialized with.", default=None)
+argparser.add_argument("-s", "--save", help="Location where the state dictionary of the model should be saved.", default=None)
+argparser.add_argument("-e", "--epochs", help="Number of epochs to run fit for.", default=1)
+argparser.add_argument("-bs", "--batch-size", help="Batch size to use when training", default=64)
+argparser.add_argument("-lr", "--learning-rate", help="Learning rate to use when training", default=0.001)
+argparser.add_argument("-m", "--momentum", help="Momentum to use when training using gradient descent", default=0.9)
+
+# Get hyper parameters
+args = argparser.parse_args()
+learning_rate = float(args.learning_rate)
+momentum = float(args.momentum)
+batch_size = int(args.batch_size)
+epochs = int(args.epochs)
+
 transform = Compose([
     Grayscale(),
     Resize((32 * S, 32 * S)),
 ])
 
-mode = None if len(sys.argv) == 1 else sys.argv[1]
-train_split, test_split = (f'{mode}_train', f'{mode}_test') if mode is not None else ('train', 'test')
+split = args.split
+train_split, test_split = (f'{split}_train', f'{split}_test') if split is not None else ('train', 'test')
 
 
 svhn_train = SVHN(split=train_split,
@@ -92,8 +101,11 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 train = DataLoader(svhn_train, batch_size=batch_size)
 test = DataLoader(svhn_test)
 
-# Setup model & move to gpu if available
 model = BaseModel().to(device)
+load_path = args.load
+if (load_path is not None): 
+    print(f"Loading state dict from path: '{load_path}'")
+    model.load_state_dict(torch.load(load_path))
 opt = torch.optim.SGD(model.parameters(), lr=learning_rate,
                       momentum=momentum)  
 
@@ -104,6 +116,11 @@ train_loss_hist, val_loss_hist = fit(model,
                                      train, 
                                      test, 
                                      device)
+
+save_path = args.save
+if (save_path is not None): 
+    print(f"Saving state dict to path: '{save_path}'")
+    torch.save(model.state_dict(), save_path)
 
 plot_loss_history(train_loss_hist, val_loss_hist)
 
