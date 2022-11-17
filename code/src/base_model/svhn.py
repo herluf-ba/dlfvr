@@ -29,9 +29,9 @@ class SVHN(Dataset):
                                                                         1) +
                                      ".png"].to_numpy()[:, 1:]
 
+        if self.target_transform:
+            labels = self.target_transform(image.shape[1:], labels)
         if self.transform:
             image = self.transform(image)
-        if self.target_transform:
-            labels = self.target_transform(labels)
 
         return image, labels
