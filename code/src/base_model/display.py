@@ -2,6 +2,25 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 
+def printProgressBar(iteration,
+                     total,
+                     prefix='',
+                     suffix='',
+                     decimals=1,
+                     length=100,
+                     fill='━',
+                     printEnd="\r"):
+    '''Print iterations progress'''
+    percent = ("{0:." + str(decimals) + "f}").format(
+        100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + ' ' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
+    # Print New Line on Complete
+    if iteration == total:
+        print()
+
+
 def plot_img_vanilla(image, labels):
     '''Plots a untransformed image with labels'''
     fig, ax = plt.subplots()

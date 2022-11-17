@@ -74,14 +74,13 @@ def target_transform(img_size, labels):
 svhn_train = SVHN(split='train',
                   transform=transform,
                   target_transform=target_transform)
+
 svhn_dev = SVHN(split='dev',
                 transform=transform,
                 target_transform=target_transform)
 
-train = DataLoader(svhn_train, batch_size=batch_size)
+train = DataLoader(svhn_dev, batch_size=batch_size)
 dev = DataLoader(svhn_dev)
-
-img, y = svhn_train[0]
 
 model = BaseModel()
 opt = torch.optim.SGD(model.parameters(), lr=learning_rate,

@@ -1,24 +1,6 @@
 import torch as t
 import numpy as np
-
-
-# Print iterations progress
-def printProgressBar(iteration,
-                     total,
-                     prefix='',
-                     suffix='',
-                     decimals=1,
-                     length=100,
-                     fill='━',
-                     printEnd="\r"):
-    percent = ("{0:." + str(decimals) + "f}").format(
-        100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + ' ' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
-    # Print New Line on Complete
-    if iteration == total:
-        print()
+from display import printProgressBar
 
 
 def loss_batch(model, loss_func, xb, yb, opt=None):
@@ -46,6 +28,10 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl):
             if (batch_i > 10):
                 break
 
+        printProgressBar(batch_count,
+                         batch_count,
+                         prefix=f"Epoch: {epoch} / {epochs}")
+
         model.eval()
         with t.no_grad():
             losses, nums = zip(*[
@@ -54,4 +40,4 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl):
             ])
         val_loss = np.sum(np.multiply(losses, nums)) / np.sum(nums)
 
-        print(epoch, val_loss)
+        print(f"validation loss: {val_loss}")

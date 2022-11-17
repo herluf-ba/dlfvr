@@ -21,10 +21,11 @@ class SVHN(Dataset):
         self.img_labels = pd.read_csv(os.path.join(self.img_dir, "bbox.csv"))
 
     def __len__(self):
-        # TODO: find highest number of image, not label count
-        return 10 if self.split == 'dev' else len(self.img_labels)
+        # TODO: maybe dont hardcode this
+        return 1000 if self.split == 'dev' else 33402
 
     def __getitem__(self, idx):
+
         # Get and transform image
         image_name = str(idx + 1) + '.png'
         img_path = os.path.join(self.img_dir, image_name)
