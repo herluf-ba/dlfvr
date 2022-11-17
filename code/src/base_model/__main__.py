@@ -11,16 +11,11 @@ from __init__ import BaseModel
 batch_size = 64
 learning_rate = 0.001
 momentum = 0.9
-epochs = 10
+epochs = 1
 loss_func = F.mse_loss
 
 S = 2
-# Transform input images
-transform = Compose([
-    Grayscale(),
-    # TODO: This resize breaks our labels. The coordinates are in the original image space.
-    Resize((32 * S, 32 * S)),
-])
+
 
 
 def into_resized(original, p):
@@ -31,6 +26,7 @@ def squared_distance(p1, p2):
     return (p2[0] - p1[0])**2 + (p2[1] - p1[1])**2
 
 
+# TODO: Move this bad boy somewhere else. 
 def target_transform(img_size, labels):
     if len(labels) > 4:
         print(f"OH NOOOOO there are too many labels: {labels}")
@@ -71,6 +67,12 @@ def target_transform(img_size, labels):
     return out
 
 
+# Setup dataloaders 
+transform = Compose([
+    Grayscale(),
+    Resize((32 * S, 32 * S)),
+])
+
 svhn_train = SVHN(split='train',
                   transform=transform,
                   target_transform=target_transform)
@@ -79,13 +81,13 @@ svhn_dev = SVHN(split='dev',
                 transform=transform,
                 target_transform=target_transform)
 
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu') 
 train = DataLoader(svhn_dev, batch_size=batch_size)
 dev = DataLoader(svhn_dev)
 
-model = BaseModel()
+# Setup model & move to gpu if available
+model = BaseModel().to(device)
 opt = torch.optim.SGD(model.parameters(), lr=learning_rate,
-                      momentum=momentum)  # Stochastic Gradient Descent
+                      momentum=momentum)  
+fit(model, epochs, loss_func, opt, train, dev, device)
 
-fit(model, epochs, loss_func, opt, train, dev)
-
-# print(f"{model.forward().shape=}")
