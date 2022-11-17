@@ -1,44 +1,8 @@
 import os
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+from display import plot_img, plot_img_vanilla
 import pandas as pd
 from torch.utils.data import Dataset
 from torchvision.io import read_image
-
-
-def plot_img_vanilla(image, labels):
-    fig, ax = plt.subplots()
-    ax.imshow(image.numpy().transpose([1, 2, 0]), cmap='gray')
-
-    for (_, left, top, width, height) in labels:
-        ax.add_patch(
-            patches.Rectangle((left, top),
-                              width,
-                              height,
-                              linewidth=1,
-                              edgecolor='r',
-                              facecolor='none'))
-    plt.show()
-
-
-def plot_img(image, labels):
-    fig, ax = plt.subplots()
-    ax.imshow(image.numpy().transpose([1, 2, 0]), cmap='gray')
-
-    for x in range(labels.shape[1]):
-        for y in range(labels.shape[2]):
-            top = labels[1][x][y]
-            left = labels[2][x][y]
-            width = labels[4][x][y]
-            height = labels[3][x][y]
-            ax.add_patch(
-                patches.Rectangle((left, top),
-                                  width,
-                                  height,
-                                  linewidth=1,
-                                  edgecolor='r',
-                                  facecolor='none'))
-    plt.show()
 
 
 class SVHN(Dataset):
@@ -73,12 +37,8 @@ class SVHN(Dataset):
         transformed_labels = self.target_transform(
             image.shape[1:], labels) if self.target_transform else labels
 
-        if idx > 2:
-            exit()
-
-        print(f"{idx=}")
-
-        plot_img_vanilla(image, labels)
-        plot_img(transformed_image, transformed_labels)
+        # print(f"{idx=}")
+        # plot_img_vanilla(image, labels)
+        # plot_img(transformed_image, transformed_labels)
 
         return transformed_image, transformed_labels
