@@ -30,7 +30,7 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device):
     train_loss_hist = []
     val_loss_hist = []
     for epoch in range(epochs):
-        epoch_prefix = f"Epoch: {epoch} / {epochs}"
+        epoch_prefix = f"Epoch: {epoch + 1} / {epochs}"
         model.train()
         for batch_i, (xb, yb) in enumerate(train_dl):
             printProgressBar(batch_i,
