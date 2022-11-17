@@ -37,13 +37,11 @@ def target_transform(img_size, labels):
 
     out = torch.zeros((15, 2, 2))
 
-    print(F"{img_size=} {labels=}")
-
     # Transform labels into resized space using img size
     unassigned = [(1, *into_resized(img_size, (top, left)),
                    *into_resized(img_size, (height, width)),
                    *(F.one_hot(torch.tensor(c - 1), num_classes=10)).numpy())
-                  for (c, top, height, left, width) in labels]
+                  for (c, left, top, width, height) in labels]
 
     half_cell = 0.5 / S
     for x in range(S):
@@ -63,7 +61,6 @@ def target_transform(img_size, labels):
                 # Assign the closest one to cell
                 closest_i = np.argmin(distances)
                 closest = unassigned[closest_i]
-                print(f" assigning ({closest_i}) {closest} to {x} {y}")
 
                 # TODO: There must be a smarter way to do this assignment
                 for i in range(15):
@@ -71,7 +68,6 @@ def target_transform(img_size, labels):
 
                 del unassigned[closest_i]
 
-    print(f"{out}")
     return out
 
 
