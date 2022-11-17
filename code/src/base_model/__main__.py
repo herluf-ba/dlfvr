@@ -5,13 +5,14 @@ from torchvision.transforms import Compose, Grayscale, Resize
 import numpy as np
 
 from svhn import SVHN
+from display import plot_loss_history
 from training import fit
 from __init__ import BaseModel
 
 batch_size = 64
 learning_rate = 0.001
 momentum = 0.9
-epochs = 1
+epochs = 100
 loss_func = F.mse_loss
 
 S = 2
@@ -89,5 +90,6 @@ dev = DataLoader(svhn_dev)
 model = BaseModel().to(device)
 opt = torch.optim.SGD(model.parameters(), lr=learning_rate,
                       momentum=momentum)  
-fit(model, epochs, loss_func, opt, train, dev, device)
+train_loss_hist, val_loss_hist = fit(model, epochs, loss_func, opt, train, dev, device)
+plot_loss_history(train_loss_hist, val_loss_hist)
 
