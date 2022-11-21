@@ -46,7 +46,7 @@ class SVHN(Dataset):
         # Get and transform image
         image_name = str(idx + 1) + '.png'
         img_path = os.path.join(self.img_dir, image_name)
-        image = read_image(img_path) / 255
+        image = read_image(img_path) 
         transformed_image = self.transform(image) if self.transform else image
 
         # Get and transform labels

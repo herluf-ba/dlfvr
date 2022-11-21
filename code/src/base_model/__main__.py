@@ -2,11 +2,13 @@ import argparse
 import torch
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
-from torchvision.transforms import Compose, Grayscale, Resize
+import torchvision
+from torchvision.transforms import Compose, Grayscale, Resize, Lambda, ToTensor
+from torchvision.io import read_image
 import numpy as np
 
 from svhn import SVHN
-from display import plot_loss_history
+from display import plot_loss_history, plot_prediction
 from training import fit
 from __init__ import BaseModel
 
@@ -59,7 +61,7 @@ def target_transform(img_size, labels):
 
     return out
 
-def train_base_model(model, device, args):
+def train_base_model(model, device, args, transform):
 
     # Get hyper parameters
     learning_rate = float(args.learning_rate)
@@ -72,10 +74,6 @@ def train_base_model(model, device, args):
     split = args.split
     train_split, test_split = (f'{split}_train', f'{split}_test') if split is not None else ('train', 'test')
 
-    transform = Compose([
-        Grayscale(),
-        Resize((32 * S, 32 * S)),
-    ])
 
     # Load data splits 
     svhn_train = SVHN(split=train_split,
@@ -121,7 +119,7 @@ if __name__ == '__main__':
     argparser.add_argument("-bs", "--batch-size", help="Batch size to use when training", default=64)
     argparser.add_argument("-lr", "--learning-rate", help="Learning rate to use when training", default=0.001)
     argparser.add_argument("-m", "--momentum", help="Momentum to use when training using gradient descent", default=0.9)
-    argparser.add_argument("-p", "--predict", help="Predict a single image",action="store_true")
+    argparser.add_argument("-p", "--predict", help="Predict a single image")
     argparser.add_argument('-t', "--train", help="Train a new base model.", action="store_true")
 
     args = argparser.parse_args()
@@ -130,6 +128,12 @@ if __name__ == '__main__':
 
     model = BaseModel().to(device)
 
+    transform = Compose([
+        Lambda(lambda img: img/255),
+        Grayscale(),
+        Resize((32 * S, 32 * S)),
+    ])
+
     # Load weights if given 
     load_path = args.load
     if (load_path is not None): 
@@ -137,7 +141,14 @@ if __name__ == '__main__':
         model.load_state_dict(torch.load(load_path))
 
     if (args.train): 
-        train_base_model(model, device, args); 
+        train_base_model(model, device, args, transform); 
 
-    if (args.predict): 
-        print('Hey ho, i wanna predict my dude')
+    predict_image_path = args.predict
+    if (predict_image_path is not None): 
+        # TODO: How to load image and add it to a batch for dimensions to match?
+        image = transform(read_image(predict_image_path))
+        image = image.unsqueeze(dim=0) # Wraps it in a "batch"
+        labels = model.forward(image)
+        
+        print(labels.shape)
+        plot_prediction(read_image(predict_image_path), labels[0])
