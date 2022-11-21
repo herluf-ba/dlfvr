@@ -143,14 +143,13 @@ if __name__ == '__main__':
         model.load_state_dict(torch.load(load_path))
 
     if (args.train): 
-        print('training time!')
         train_base_model(model, device, args, transform); 
 
     predict_image_path = args.predict
     if (predict_image_path is not None): 
-        # TODO: How to load image and add it to a batch for dimensions to match?
         image = transform(read_image(predict_image_path))
         image = image.unsqueeze(dim=0) # Wraps it in a "batch"
         labels = model.forward(image)
         
+        # detach for numpy functions in libraries to work with tensors
         plot_img(image[0].detach(), labels[0].detach(), conf_threshold=0.6)
