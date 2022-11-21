@@ -1,3 +1,5 @@
+# TODO: Do we somehow normalize labels? I do not think we should do that. 
+# TODO: Get the predicted class in "plot_img" to label each bounding box
 import argparse
 import torch
 from torch.utils.data import DataLoader
@@ -8,7 +10,7 @@ from torchvision.io import read_image
 import numpy as np
 
 from svhn import SVHN
-from display import plot_loss_history, plot_prediction
+from display import plot_loss_history, plot_img
 from training import fit
 from __init__ import BaseModel
 
@@ -141,6 +143,7 @@ if __name__ == '__main__':
         model.load_state_dict(torch.load(load_path))
 
     if (args.train): 
+        print('training time!')
         train_base_model(model, device, args, transform); 
 
     predict_image_path = args.predict
@@ -150,5 +153,4 @@ if __name__ == '__main__':
         image = image.unsqueeze(dim=0) # Wraps it in a "batch"
         labels = model.forward(image)
         
-        print(labels.shape)
-        plot_prediction(read_image(predict_image_path), labels[0])
+        plot_img(image[0].detach(), labels[0].detach(), conf_threshold=0.6)

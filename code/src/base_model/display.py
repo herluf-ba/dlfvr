@@ -51,13 +51,17 @@ def plot_img_vanilla(image, labels):
     plt.show()
 
 
-def plot_img(image, labels):
+def plot_img(image, labels, conf_threshold=0):
     '''Plots a transformed image with labels'''
     fig, ax = plt.subplots()
     ax.imshow(image.numpy().transpose([1, 2, 0]), cmap='gray')
 
     for x in range(labels.shape[1]):
         for y in range(labels.shape[2]):
+            # Ignore bounding box if below confidence threshold
+            conf = labels[0][x][y]
+            if (conf < conf_threshold): 
+                break; 
             top = labels[1][x][y]
             left = labels[2][x][y]
             width = labels[4][x][y]
@@ -70,28 +74,6 @@ def plot_img(image, labels):
                                   edgecolor='r',
                                   facecolor='none'))
     plt.show()
-
-def plot_prediction(untransformed_img, labels): 
-    labels = labels.detach().numpy()
-    fig, ax = plt.subplots() 
-    numpy_img = untransformed_img.permute(1,2,0).detach().numpy();
-    ax.imshow(numpy_img, cmap='gray') # (channels, h, w) -> (h, w, channels)
-    for x in range(labels.shape[1]):
-        for y in range(labels.shape[2]):
-            top = labels[1][x][y]
-            left = labels[2][x][y]
-            width = labels[4][x][y]
-            height = labels[3][x][y]
-            ax.add_patch(
-                patches.Rectangle((left, top),
-                                  width,
-                                  height,
-                                  linewidth=1,
-                                  edgecolor='r',
-                                  facecolor='none'))
-            print('plotting bb', top, left, width, height)
-    plt.show()
-
 
 def plot_loss_history(train_loss_hist, val_loss_hist): 
     epochs = list(range(len(train_loss_hist)))
