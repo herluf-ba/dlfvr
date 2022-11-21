@@ -10,7 +10,6 @@ from display import plot_loss_history
 from training import fit
 from __init__ import BaseModel
 
-loss_func = F.mse_loss
 S = 2
 
 def into_resized(original, p):
@@ -21,7 +20,6 @@ def squared_distance(p1, p2):
     return (p2[0] - p1[0])**2 + (p2[1] - p1[1])**2
 
 
-# TODO: Move this bad boy somewhere else. 
 def target_transform(img_size, labels):
     # stfu computer if len(labels) > 4:
     #    print(f"OH NOOOOO there are too many labels: {labels}")
@@ -61,66 +59,85 @@ def target_transform(img_size, labels):
 
     return out
 
+def train_base_model(model, device, args):
 
-# Setup argument parser
-argparser = argparse.ArgumentParser(description = 'Model based on lab3 simple yolo implementation') 
-argparser.add_argument("-sp", "--split", help = "Controls which split is used.", default=None)
-argparser.add_argument("-l", "--load", help = "Path to a saved state dictionary the model should be initialized with.", default=None)
-argparser.add_argument("-s", "--save", help="Location where the state dictionary of the model should be saved.", default=None)
-argparser.add_argument("-e", "--epochs", help="Number of epochs to run fit for.", default=1)
-argparser.add_argument("-bs", "--batch-size", help="Batch size to use when training", default=64)
-argparser.add_argument("-lr", "--learning-rate", help="Learning rate to use when training", default=0.001)
-argparser.add_argument("-m", "--momentum", help="Momentum to use when training using gradient descent", default=0.9)
+    # Get hyper parameters
+    learning_rate = float(args.learning_rate)
+    momentum = float(args.momentum)
+    batch_size = int(args.batch_size)
+    epochs = int(args.epochs)
+    loss_func = F.mse_loss
 
-# Get hyper parameters
-args = argparser.parse_args()
-learning_rate = float(args.learning_rate)
-momentum = float(args.momentum)
-batch_size = int(args.batch_size)
-epochs = int(args.epochs)
+       
+    split = args.split
+    train_split, test_split = (f'{split}_train', f'{split}_test') if split is not None else ('train', 'test')
 
-transform = Compose([
-    Grayscale(),
-    Resize((32 * S, 32 * S)),
-])
+    transform = Compose([
+        Grayscale(),
+        Resize((32 * S, 32 * S)),
+    ])
 
-split = args.split
-train_split, test_split = (f'{split}_train', f'{split}_test') if split is not None else ('train', 'test')
+    # Load data splits 
+    svhn_train = SVHN(split=train_split,
+                      transform=transform,
+                      target_transform=target_transform)
+
+    svhn_test = SVHN(split=test_split, 
+                     transform=transform, 
+                     target_transform=target_transform)
+
+    train = DataLoader(svhn_train, batch_size=batch_size)
+    test = DataLoader(svhn_test)
 
 
-svhn_train = SVHN(split=train_split,
-                  transform=transform,
-                  target_transform=target_transform)
-
-svhn_test = SVHN(split=test_split, 
-                 transform=transform, 
-                 target_transform=target_transform)
-
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu') 
-
-train = DataLoader(svhn_train, batch_size=batch_size)
-test = DataLoader(svhn_test)
-
-model = BaseModel().to(device)
-load_path = args.load
-if (load_path is not None): 
-    print(f"Loading state dict from path: '{load_path}'")
-    model.load_state_dict(torch.load(load_path))
-opt = torch.optim.SGD(model.parameters(), lr=learning_rate,
+    # Train model
+    opt = torch.optim.SGD(model.parameters(), lr=learning_rate,
                       momentum=momentum)  
 
-train_loss_hist, val_loss_hist = fit(model, 
-                                     epochs, 
-                                     loss_func, 
-                                     opt, 
-                                     train, 
-                                     test, 
-                                     device)
+    train_loss_hist, val_loss_hist = fit(model, 
+                                         epochs, 
+                                         loss_func, 
+                                         opt, 
+                                         train, 
+                                         test, 
+                                         device)
 
-save_path = args.save
-if (save_path is not None): 
-    print(f"Saving state dict to path: '{save_path}'")
-    torch.save(model.state_dict(), save_path)
+    ## Save trained model 
+    save_path = args.save
+    if (save_path is not None): 
+        print(f"Saving state dict to path: '{save_path}'")
+        torch.save(model.state_dict(), save_path)
 
-plot_loss_history(train_loss_hist, val_loss_hist)
+    plot_loss_history(train_loss_hist, val_loss_hist)
 
+
+if __name__ == '__main__': 
+    # Setup argument parser
+    argparser = argparse.ArgumentParser(description = 'Model based on lab3 simple yolo implementation') 
+    argparser.add_argument("-sp", "--split", help = "Controls which split is used.", default=None)
+    argparser.add_argument("-l", "--load", help = "Path to a saved state dictionary the model should be initialized with.", default=None)
+    argparser.add_argument("-s", "--save", help="Location where the state dictionary of the model should be saved.", default=None)
+    argparser.add_argument("-e", "--epochs", help="Number of epochs to run fit for.", default=1)
+    argparser.add_argument("-bs", "--batch-size", help="Batch size to use when training", default=64)
+    argparser.add_argument("-lr", "--learning-rate", help="Learning rate to use when training", default=0.001)
+    argparser.add_argument("-m", "--momentum", help="Momentum to use when training using gradient descent", default=0.9)
+    argparser.add_argument("-p", "--predict", help="Predict a single image",action="store_true")
+    argparser.add_argument('-t', "--train", help="Train a new base model.", action="store_true")
+
+    args = argparser.parse_args()
+
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu') 
+
+    model = BaseModel().to(device)
+
+    # Load weights if given 
+    load_path = args.load
+    if (load_path is not None): 
+        print(f"Loading state dict from path: '{load_path}'")
+        model.load_state_dict(torch.load(load_path))
+
+    if (args.train): 
+        train_base_model(model, device, args); 
+
+    if (args.predict): 
+        print('Hey ho, i wanna predict my dude')
