@@ -64,13 +64,14 @@ def target_transform(img_size, labels):
     return out
 
 def train_base_model(model, device, args, transform):
-
+    print("Training on device:", device)
     # Get hyper parameters
     learning_rate = float(args.learning_rate)
     momentum = float(args.momentum)
     batch_size = int(args.batch_size)
     epochs = int(args.epochs)
     loss_func = F.mse_loss
+    print(f"{learning_rate=}\n{momentum=}\n{batch_size=}\n{epochs=}")
 
        
     split = args.split
@@ -140,7 +141,7 @@ if __name__ == '__main__':
     load_path = args.load
     if (load_path is not None): 
         print(f"Loading state dict from path: '{load_path}'")
-        model.load_state_dict(torch.load(load_path))
+        model.load_state_dict(torch.load(load_path, map_location=device))
 
     if (args.train): 
         train_base_model(model, device, args, transform); 
