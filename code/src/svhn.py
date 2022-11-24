@@ -1,19 +1,23 @@
 import os
+import torch
+import torch.nn.functional as F
+import numpy as np
 from display import plot_img, plot_img_vanilla
 import pandas as pd
 from torch.utils.data import Dataset
 from torchvision.io import read_image
+from torchvision.transforms import Compose, Grayscale, Resize, Lambda, ToTensor
 from settings import S
 
 
 class SVHN(Dataset):
 
     splits = {
-        'test': {
+        'default_test': {
             'start': 30402,
             'end': 33402
         },
-        'train': {
+        'default_train': {
             'start': 0,
             'end': 30401
         },
@@ -27,7 +31,7 @@ class SVHN(Dataset):
         }
     }
 
-    def __init__(self, split="train", transform=None, target_transform=None):
+    def __init__(self, split, transform=None, target_transform=None):
         self.transform = transform
         self.target_transform = target_transform
         self.split = split

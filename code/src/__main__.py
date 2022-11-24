@@ -12,42 +12,7 @@ import numpy as np
 from svhn import SVHN, transform, target_transform
 from display import plot_loss_history, plot_img
 from training import fit
-from base_model import BaseModel
-from settings import S, MODEL, LOSS_FUNCTIONS
-
-
-def train_base_model(model,
-                     device,
-                     transform,
-                     split,
-                     learning_rate,
-                     momentum,
-                     batch_size,
-                     epochs,
-                     loss_func,
-                     save_path=None):
-    train_split, test_split = (
-        f'{split}_train', f'{split}_test') if split is not None else ('train',
-                                                                      'test')
-    # Load data splits
-    svhn_train = SVHN(split=train_split,
-                      transform=transform,
-                      target_transform=target_transform)
-
-    svhn_test = SVHN(split=test_split,
-                     transform=transform,
-                     target_transform=target_transform)
-
-    train = DataLoader(svhn_train, batch_size=batch_size)
-    test = DataLoader(svhn_test)
-
-    # Train model
-    opt = torch.optim.SGD(model.parameters(),
-                          lr=learning_rate,
-                          momentum=momentum)
-
-    return fit(model, epochs, loss_func, opt, train, test, device)
-
+from settings import S, MODELS, LOSS_FUNCTIONS
 
 if __name__ == '__main__':
     # Setup argument parser
@@ -56,7 +21,7 @@ if __name__ == '__main__':
     argparser.add_argument("-sp",
                            "--split",
                            help="Controls which split is used.",
-                           default=None)
+                           default='default')
     argparser.add_argument(
         "-l",
         "--load",
@@ -129,9 +94,8 @@ if __name__ == '__main__':
             f"{learning_rate=}\n{momentum=}\n{batch_size=}\n{epochs=}\nloss_func={args.loss_func}"
         )
 
-        train_split, test_split = (f'{split}_train',
-                                   f'{split}_test') if split is not None else (
-                                       'train', 'test')
+        train_split, test_split = (f'{args.split}_train', f'{args.split}_test')
+
         # Load data splits
         svhn_train = SVHN(split=train_split,
                           transform=transform,
