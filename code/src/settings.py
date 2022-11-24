@@ -33,11 +33,13 @@ def extract_bounding_boxes(tensor):
 
 # https://www.dailydot.com/wp-content/uploads/eba/cb/skitched-20161229-112404.jpg
 # Is this?
-def custom_loss(input,
-                target,
+def custom_loss(input_batch,
+                target_batch,
                 size_average=None,
                 reduce=None,
                 reduction="mean"):
+
+    assert is_batched(input_batch)
 
     input_bb = extract_bounding_boxes(input)
     input_conf = extract_confidences(input)
@@ -47,7 +49,14 @@ def custom_loss(input,
     target_conf = extract_confidences(target)
     target_classes = extract_class_vector(target)
 
-    CE_loss = 
+    # TODO: this must be optimizeable in some way
+    for idx, image in enumerate(input_batch):
+        # Find target grid cells where there's items
+        targbe
+        # Extract grid cells from image
+        # Extract classes from grid cells
+        # Extract classes from target grid cells
+        # Sum cross entropy loss between them.
 
     print(f"{target.shape=}", f"{input.shape=}")
     exit()
