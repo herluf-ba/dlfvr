@@ -1,4 +1,5 @@
-__pycache__
+.vscode
+__pycache__/
 notes.md
 exercises/*
 bin
@@ -7,8 +8,15 @@ include
 lib
 share
 pyvenv.cfg
-
 .DS_Store
+
+code/datasets/train/*.png
+code/datasets/test/*.png
+code/datasets/train/*.m
+code/datasets/test/*.m
+code/datasets/train/*.mat
+code/datasets/test/*.mat
+*.png
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
