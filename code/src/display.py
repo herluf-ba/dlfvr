@@ -60,8 +60,8 @@ def plot_img(image, labels, conf_threshold=0):
         for y in range(labels.shape[2]):
             # Ignore bounding box if below confidence threshold
             conf = labels[0][x][y]
-            if (conf < conf_threshold): 
-                break; 
+            if (conf < conf_threshold):
+                break
             top = labels[1][x][y]
             left = labels[2][x][y]
             width = labels[4][x][y]
@@ -75,9 +75,19 @@ def plot_img(image, labels, conf_threshold=0):
                                   facecolor='none'))
     plt.show()
 
-def plot_loss_history(train_loss_hist, val_loss_hist): 
+
+def plot_loss_history(train_loss_hist, val_loss_hist, train_iou_hist,
+                      val_iou_hist):
     epochs = list(range(len(train_loss_hist)))
-    print('plotting', train_loss_hist, val_loss_hist)
-    plt.plot(epochs, train_loss_hist, label='Training loss') 
+
+    plt.title = f"Loss ({epochs} epochs)"
+    plt.plot(epochs, train_loss_hist, label='Training loss')
     plt.plot(epochs, val_loss_hist, label='Validation loss')
+    plt.legend()
+    plt.show()
+
+    plt.title = f"IoU ({epochs} epochs)"
+    plt.plot(epochs, train_iou_hist, label='Training IoU')
+    plt.plot(epochs, val_iou_hist, label='Validation IoU')
+    plt.legend()
     plt.show()

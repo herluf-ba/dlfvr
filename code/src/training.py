@@ -67,4 +67,4 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device):
 
             print(f"{val_loss=} {train_loss=} {val_iou=} {train_iou=}")
 
-    return train_loss_hist, val_loss_hist
+    return train_loss_hist, val_loss_hist, train_iou_hist, val_iou_hist

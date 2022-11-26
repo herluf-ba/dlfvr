@@ -130,7 +130,7 @@ class attribute:
 
 def batch_extract(tensor_batch, indicies):
     return torch.index_select(tensor_batch, 1, torch.tensor(indicies)).reshape(
-        -1, S * S, S * S).mT
+        -1, S * S, len(indicies)).mT
 
 
 def batch_extract_confidence(tensor_batch):
