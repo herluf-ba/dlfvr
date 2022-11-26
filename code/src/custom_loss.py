@@ -24,6 +24,15 @@ def custom_loss(input_batch,
     target_conf = batch_extract_confidence(target_batch)
     target_bb = batch_extract_bounding_box(target_batch)
     target_classes = batch_extract_classes(target_batch)
+
+    # TODO: I'm a bit in doubt whether this filter works correctly
+    conf_filter = target_conf > 0
+    target_classes = target_classes[conf_filter]
+    input_classes = input_classes[conf_filter]
     
-    cross_entropy_loss = F.cross_entropy(input_classes, target_classes * 100)
-    return cross_entropy_loss
+    classes_loss = F.cross_entropy(input_classes, target_classes)
+    bb_loss = F.mse_loss(input_bb, target_bb)
+
+    confidence_loss = F.binary_cross_entropy(input_conf, target_conf)#, weight=confidence_weights)
+
+    return classes_loss + bb_loss + confidence_loss

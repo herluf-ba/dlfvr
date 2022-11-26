@@ -4,13 +4,9 @@ from display import printProgressBar
 from svhn import batch_extract_classes
 
 
-def loss_batch(model, loss_func, xb, yb, opt=None, print_prediction=False):
+def loss_batch(model, loss_func, xb, yb, opt=None):
     prediction = model.forward(xb)
     loss = loss_func(prediction, yb)
-
-    if(print_prediction): 
-        print(batch_extract_classes(prediction)[0])
-        print(batch_extract_classes(yb)[0])
 
     if opt is not None:
         loss.backward()
@@ -42,8 +38,7 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device):
                              batch_count,
                              prefix=epoch_prefix)
             xb, yb = xb.to(device), yb.to(device)
-            is_last_loss_batch = batch_i == len(train_dl) - 1 and epoch == epochs - 1
-            loss_batch(model, loss_func, xb, yb, opt, print_prediction=is_last_loss_batch)
+            loss_batch(model, loss_func, xb, yb, opt)
 
         printProgressBar(batch_count,
                          batch_count,
