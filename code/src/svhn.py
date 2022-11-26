@@ -26,7 +26,7 @@ class SVHN(Dataset):
             'end': 999
         },
         'develop_test': {
-            'start': 100,
+            'start': 1000,
             'end': 1500
         }
     }
@@ -117,3 +117,48 @@ transform = Compose([
     Grayscale(),
     Resize((32 * S, 32 * S)),
 ])
+
+
+class attribute:
+    CONFIDENCE = 0
+    LEFT = 1
+    TOP = 2
+    WIDTH = 3
+    HEIGHT = 4
+    CLASSES = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+
+def batch_extract(tensor_batch, indicies):
+    device = torch.device(
+        'cuda') if torch.cuda.is_available() else torch.device('cpu')
+    
+    indicies = torch.tensor(indicies).to(device)
+    extracted_tensor = torch.index_select(tensor_batch, 1, indicies)
+    extracted_tensor = extracted_tensor.reshape(-1, S * S, S*S)
+    return extracted_tensor.mT
+
+
+def batch_extract_confidence(tensor_batch):
+    device = torch.device(
+        'cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+    indicies = torch.tensor([attribute.CONFIDENCE]).to(device)
+    extracted_confidences = torch.index_select(tensor_batch, 1, indicies)
+    extracted_confidences = extracted_confidences.reshape(-1, S * S)
+    return extracted_confidences
+
+
+def batch_extract_bounding_box(tensor_batch):
+    return batch_extract(
+        tensor_batch,
+        [attribute.LEFT, attribute.TOP, attribute.WIDTH, attribute.HEIGHT])
+
+
+def batch_extract_classes(tensor_batch):
+    device = torch.device(
+        'cuda') if torch.cuda.is_available() else torch.device('cpu')
+    
+    indicies = torch.tensor(attribute.CLASSES).to(device)
+    extracted_classes = torch.index_select(tensor_batch, 1, indicies)
+    extracted_classes = extracted_classes.reshape(-1, 10, S * S)
+    return extracted_classes.mT

@@ -13,6 +13,7 @@ from svhn import SVHN, transform, target_transform
 from display import plot_loss_history, plot_img
 from training import fit
 from settings import S, MODELS, LOSS_FUNCTIONS
+from custom_loss import custom_loss
 
 if __name__ == '__main__':
     # Setup argument parser
@@ -87,7 +88,7 @@ if __name__ == '__main__':
         momentum = float(args.momentum)
         batch_size = int(args.batch_size)
         epochs = int(args.epochs)
-        loss_func = LOSS_FUNCTIONS[args.loss_func]
+        loss_func = custom_loss  #LOSS_FUNCTIONS[args.loss_func] #Hardcoded this while testing. Circular import bullshittery.
 
         print("Training on device:", device)
         print(
@@ -117,9 +118,9 @@ if __name__ == '__main__':
                                              train, test, device)
 
         ## Save trained model
-        if (args.save_path is not None):
-            print(f"Saving state dict to path: '{args.save_path}'")
-            torch.save(model.state_dict(), args.save_path)
+        if (args.save):
+            print(f"Saving state dict to path: '{args.save}'")
+            torch.save(model.state_dict(), args.save)
 
         plot_loss_history(train_loss_hist, val_loss_hist)
 
