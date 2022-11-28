@@ -12,7 +12,7 @@ import numpy as np
 from svhn import SVHN, transform, target_transform
 from display import plot_loss_history, plot_img
 from training import fit
-from settings import S, MODELS, LOSS_FUNCTIONS
+from settings import S, MODELS, LOSS_FUNCTIONS, batch_extract_classes, batch_extract_confidence
 
 if __name__ == '__main__':
     # Setup argument parser
@@ -87,7 +87,9 @@ if __name__ == '__main__':
         momentum = float(args.momentum)
         batch_size = int(args.batch_size)
         epochs = int(args.epochs)
-        loss_func = LOSS_FUNCTIONS[args.loss_func]
+        loss_func = LOSS_FUNCTIONS[
+            args.
+            loss_func]  #Hardcoded this while testing. Circular import bullshittery.
 
         print("Training on device:", device)
         print(
@@ -117,7 +119,7 @@ if __name__ == '__main__':
             model, epochs, loss_func, opt, train, test, device)
 
         ## Save trained model
-        if (args.save is not None):
+        if (args.save):
             print(f"Saving state dict to path: '{args.save}'")
             torch.save(model.state_dict(), args.save)
 
@@ -128,8 +130,15 @@ if __name__ == '__main__':
     predict_image_path = args.predict
     if (predict_image_path is not None):
         image = transform(read_image(predict_image_path))
-        image = image.unsqueeze(dim=0)  # Wraps it in a "batch"
+        image = image.unsqueeze(dim=0).to(device)
         labels = model.forward(image)
+
+        classes = batch_extract_classes(labels)
+        confidences = batch_extract_confidence(labels)
+
+        # Move back to cpu for plotting
+        image = image.cpu()
+        labels = labels.cpu()
 
         # detach for numpy functions in libraries to work with tensors
         plot_img(image[0].detach(), labels[0].detach(), conf_threshold=0.0)

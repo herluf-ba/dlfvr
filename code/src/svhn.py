@@ -117,31 +117,3 @@ transform = Compose([
     Grayscale(),
     Resize((32 * S, 32 * S)),
 ])
-
-
-class attribute:
-    CONFIDENCE = 0
-    LEFT = 1
-    TOP = 2
-    WIDTH = 3
-    HEIGHT = 4
-    CLASSES = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-
-
-def batch_extract(tensor_batch, indicies):
-    return torch.index_select(tensor_batch, 1, torch.tensor(indicies)).reshape(
-        -1, S * S, len(indicies)).mT
-
-
-def batch_extract_confidence(tensor_batch):
-    return batch_extract(tensor_batch, [attribute.CONFIDENCE])
-
-
-def batch_extract_bounding_box(tensor_batch):
-    return batch_extract(
-        tensor_batch,
-        [attribute.LEFT, attribute.TOP, attribute.WIDTH, attribute.HEIGHT])
-
-
-def batch_extract_classes(tensor_batch):
-    return batch_extract(tensor_batch, attribute.CLASSES)

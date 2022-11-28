@@ -1,6 +1,5 @@
 import torch as t
 import numpy as np
-from metrics import intersection_over_union
 from display import printProgressBar
 
 
@@ -8,11 +7,8 @@ def score_batch(model, loss_func, xb, yb, opt=None):
     prediction = model.forward(xb)
     loss = loss_func(prediction, yb)
 
-    ## compute iou if model is in eval mode
+    ## TODO: remove when logger is a thing
     iou = 0.0
-    if not model.training:
-        iou = intersection_over_union(prediction, yb)
-
     if opt is not None:
         loss.backward()
         opt.step()
