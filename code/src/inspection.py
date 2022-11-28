@@ -1,5 +1,9 @@
+import torch 
+import matplotlib.pyplot as plt
+
 # Stolen from lab3 
 def get_layer_data(model):
+    #TODO: Why isn't activations working? 
     '''
     Examples usage: 
     layer_names, activations, gradients = get_layer_data(model)
@@ -14,13 +18,15 @@ def get_layer_data(model):
     layer_names = []
 
     with torch.no_grad():
-    for name, param in model.named_parameters():
-      if param.requires_grad and name.startswith('W'):
-          layer_names.append(name)
-          gradients.append(param.grad)
+        for name, param in model.named_parameters():
+            # name format ex: encoded.0.weight
+            param_type = name.split(".")[-1]
+            if param.requires_grad and param_type.startswith('w'):
+                layer_names.append(name)
+                gradients.append(param.grad)
 
-    activations = model.activations()
-
+        #activations = model.activations()
+        activations = None  
     return layer_names, activations, gradients
 
 
@@ -44,7 +50,8 @@ def get_layer_stats(x,absolute=False):
           avg.append(x[layer].mean().detach().cpu().numpy())
 
         std.append(x[layer].std().detach().cpu().numpy())
-
+    
+    print(len(avg))
     return avg, std
 
 
