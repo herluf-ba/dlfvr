@@ -70,6 +70,19 @@ def batch_transform_box_coordinates(boxes):
     return boxes
 
 
+def custom_mse(input_batch,
+               target_batch,
+               size_average=None,
+               reduce=None,
+               reduction="mean",
+               logger=None):
+    loss = mse_loss(input_batch, target_batch, reduction=reduction)
+    if logger:
+        logger.add_loss_item("MSE loss", loss.item())
+
+    return loss
+
+
 # https://www.dailydot.com/wp-content/uploads/eba/cb/skitched-20161229-112404.jpg
 # Is this?
 def custom_loss(input_batch,
@@ -135,7 +148,7 @@ def custom_loss_with_iou(input_batch,
 S = 2
 MODELS = {"base": BaseModel, "skipper": None}
 LOSS_FUNCTIONS = {
-    "mse": mse_loss,
+    "mse": custom_mse,
     "custom_loss": custom_loss,
     "custom_loss_with_iou": custom_loss_with_iou
 }

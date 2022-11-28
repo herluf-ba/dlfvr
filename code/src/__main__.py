@@ -10,9 +10,10 @@ from torchvision.io import read_image
 import numpy as np
 
 from svhn import SVHN, transform, target_transform
-from display import plot_loss_history, plot_img
+from display import plot_img
 from training import fit
 from settings import S, MODELS, LOSS_FUNCTIONS, batch_extract_classes, batch_extract_confidence
+from logger import Logger
 
 if __name__ == '__main__':
     # Setup argument parser
@@ -115,16 +116,21 @@ if __name__ == '__main__':
                               lr=learning_rate,
                               momentum=momentum)
 
-        train_loss_hist, val_loss_hist, train_iou_hist, val_iou_hist = fit(
-            model, epochs, loss_func, opt, train, test, device)
+        logger = Logger()
+        fit(model, epochs, loss_func, opt, train, test, device, logger)
 
         ## Save trained model
         if (args.save):
             print(f"Saving state dict to path: '{args.save}'")
             torch.save(model.state_dict(), args.save)
 
-        plot_loss_history(train_loss_hist, val_loss_hist, train_iou_hist,
-                          val_iou_hist)
+        logger.plot_loss_items(logger.history.keys(),
+                               title=f'Loss over {args.epochs} epochs')
+
+        #logger.plot_loss_items(['Validation loss', 'Training loss'],
+        #                       title=f"Loss over {args.epochs} epochs")
+        #logger.plot_loss_items(['Validation IoU', 'Training IoU'],
+        #                       title='IoU over {args.epochs} epochs')
 
     ## Produce a predict if configured to do so
     predict_image_path = args.predict
