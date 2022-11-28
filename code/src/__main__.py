@@ -9,7 +9,7 @@ from torchvision.transforms import Compose, Grayscale, Resize, Lambda, ToTensor
 from torchvision.io import read_image
 import numpy as np
 
-from svhn import SVHN, transform, target_transform
+from svhn import SVHN, transform, target_transform, batch_extract_classes, batch_extract_confidence
 from display import plot_loss_history, plot_img
 from training import fit
 from settings import S, MODELS, LOSS_FUNCTIONS
@@ -112,7 +112,8 @@ if __name__ == '__main__':
         # Train model
         opt = torch.optim.SGD(model.parameters(),
                               lr=learning_rate,
-                              momentum=momentum)
+                              momentum=momentum
+                              )
 
         train_loss_hist, val_loss_hist = fit(model, epochs, loss_func, opt,
                                              train, test, device)
@@ -128,8 +129,15 @@ if __name__ == '__main__':
     predict_image_path = args.predict
     if (predict_image_path is not None):
         image = transform(read_image(predict_image_path))
-        image = image.unsqueeze(dim=0)  # Wraps it in a "batch"
+        image = image.unsqueeze(dim=0).to(device)
         labels = model.forward(image)
+
+        classes = batch_extract_classes(labels)
+        confidences = batch_extract_confidence(labels)
+        
+        # Move back to cpu for plotting 
+        image = image.cpu(); 
+        labels = labels.cpu()
 
         # detach for numpy functions in libraries to work with tensors
         plot_img(image[0].detach(), labels[0].detach(), conf_threshold=0.0)
