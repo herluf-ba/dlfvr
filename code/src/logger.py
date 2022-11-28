@@ -1,11 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from inspection import get_layer_data, get_layer_stats, plot_hist
 
 
 class Logger:
     mode = 'val'
     current_epoch = {}
     history = {}
+
+    def __init__(self, save_path): 
+        self.save_path = save_path
 
     def set_mode(self, mode):
         assert mode in ['val', 'train']
@@ -49,4 +53,14 @@ class Logger:
         if len(names) > 1:
             plt.legend()
 
-        plt.show()
+        plt.savefig(f'{self.save_path}/loss.png')
+        plt.close('all') # Clear for future plotting
+
+    def diagnose_model(self, model, save_suffix=''): 
+        layer_names, activations, gradients = get_layer_data(model); 
+        gradient_mean, gradient_std = get_layer_stats(gradients, absolute=True)
+
+        plot_hist(gradients, layer_names, xrange=None,avg=gradient_mean,sd=gradient_std)
+        plt.savefig(f'{self.save_path}/gradients_histogram{save_suffix}.png')
+        plt.close('all') # Clear for future plotting
+

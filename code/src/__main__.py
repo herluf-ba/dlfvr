@@ -1,5 +1,6 @@
 # TODO: Do we somehow normalize labels? I do not think we should do that.
 # TODO: Get the predicted class in "plot_img" to label each bounding box
+import os 
 import argparse
 import torch
 from torch.utils.data import DataLoader
@@ -88,6 +89,8 @@ if __name__ == '__main__':
         momentum = float(args.momentum)
         batch_size = int(args.batch_size)
         epochs = int(args.epochs)
+        split = args.split
+
         loss_func = LOSS_FUNCTIONS[
             args.
             loss_func]  #Hardcoded this while testing. Circular import bullshittery.
@@ -97,8 +100,8 @@ if __name__ == '__main__':
             f"{learning_rate=}\n{momentum=}\n{batch_size=}\n{epochs=}\nloss_func={args.loss_func}"
         )
 
-        train_split, test_split = (f'{args.split}_train', f'{args.split}_test')
-
+        train_split, test_split = (f'{split}_train', f'{split}_test')
+        
         # Load data splits
         svhn_train = SVHN(split=train_split,
                           transform=transform,
@@ -116,7 +119,16 @@ if __name__ == '__main__':
                               lr=learning_rate,
                               momentum=momentum)
 
-        logger = Logger()
+        # Find path to save artifacts of training to 
+        fingerprint = f'{args.loss_func}-{split}-e_{epochs}-bs_{batch_size}-mom_{momentum}-lr_{learning_rate}'
+        save_path = f'runs/{fingerprint}'
+        i = 0; 
+        while os.path.exists(save_path): 
+            i += 1; 
+            save_path = f'runs/{fingerprint}_{i}'
+        os.mkdir(save_path)
+
+        logger = Logger(save_path)
         fit(model, epochs, loss_func, opt, train, test, device, logger)
 
         ## Save trained model
@@ -126,11 +138,6 @@ if __name__ == '__main__':
 
         logger.plot_loss_items(logger.history.keys(),
                                title=f'Loss over {args.epochs} epochs')
-
-        #logger.plot_loss_items(['Validation loss', 'Training loss'],
-        #                       title=f"Loss over {args.epochs} epochs")
-        #logger.plot_loss_items(['Validation IoU', 'Training IoU'],
-        #                       title='IoU over {args.epochs} epochs')
 
     ## Produce a predict if configured to do so
     predict_image_path = args.predict

@@ -3,22 +3,8 @@ import torch.nn as nn
 import inspect
 import numpy as np
 from display import printProgressBar
-from inspection import get_layer_data, get_layer_stats, plot_hist
-import matplotlib.pyplot as plt
 
-def diagnose_model(model): 
-    layer_names, activations, gradients = get_layer_data(model); 
-    gradient_mean, gradient_std = get_layer_stats(gradients, absolute=True)
-    print(f'{gradient_mean=}, {gradient_std=}')
-
-    plot_hist(gradients,xrange=None,avg=gradient_mean,sd=gradient_std)
-    plt.show()
-
-    #plot_hist(activations,xrange=None,avg=activation_mean,sd=activation_std)
-    #plt.show()
-
-
-def score_batch(model, loss_func, xb, yb, opt=None, logger=None, save_diagnose_plots=False):
+def score_batch(model, loss_func, xb, yb, opt=None, logger=None, diagnoser=None, epoch=None):
     prediction = model.forward(xb)
 
     should_log = logger and 'logger' in inspect.getargspec(loss_func).args
@@ -29,8 +15,8 @@ def score_batch(model, loss_func, xb, yb, opt=None, logger=None, save_diagnose_p
     if opt is not None:
         loss.backward()
         # Gotta diagnose right after backward - grad is calculated here
-        if save_diagnose_plots: 
-            diagnose_model(model) 
+        if diagnoser: 
+            diagnoser.diagnose_model(model, save_suffix=f'_e{epoch}') 
         opt.step()
         opt.zero_grad()
 
@@ -58,7 +44,9 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device, logger):
         for batch_i, (xb, yb) in enumerate(train_dl):
             printProgressBar(batch_i, batch_count, prefix=epoch_prefix)
             xb, yb = xb.to(device), yb.to(device)
-            score_batch(model, loss_func, xb, yb, opt, logger=None, save_diagnose_plots=batch_i == len(train_dl) - 1)
+            # Diagnose on last batch of epoch
+            diagnoser = logger if len(train_dl ) - 1 == batch_i else None
+            score_batch(model, loss_func, xb, yb, opt, logger=None, diagnoser=diagnoser, epoch=epoch)
 
         printProgressBar(batch_count, batch_count, prefix=epoch_prefix)
 

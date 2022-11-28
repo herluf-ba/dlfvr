@@ -51,11 +51,10 @@ def get_layer_stats(x,absolute=False):
 
         std.append(x[layer].std().detach().cpu().numpy())
     
-    print(len(avg))
     return avg, std
 
 
-def plot_hist(hs,xrange=(-1,1),avg=None,sd=None):
+def plot_hist(hs, layer_names, xrange=(-1,1),avg=None,sd=None):
     ''' 
     Example usage:
         print('Gradients:\n')
@@ -66,13 +65,13 @@ def plot_hist(hs,xrange=(-1,1),avg=None,sd=None):
         plot_hist(activations,xrange=None,avg=activation_mean,sd=activation_std)
         plt.show()
     '''
-    plt.figure(figsize=(20,3))
+    plt.figure(figsize=(20,60))
     for layer in range(len(hs)):
-        plt.subplot(1,len(hs),layer+1)
+        plt.subplot(int(len(hs)/2),3,layer+1)
         activations = hs[layer].detach().cpu().numpy().flatten()
         plt.hist(activations, bins=20, range=xrange)
 
-        title = 'Layer ' + str(layer+1)
+        title = "-".join((layer_names[layer]).split('.')[:-1]) # encoded.06.weights -> encoded-06
         if avg:
           title += '\n' + "mean {0:.2f}".format(avg[layer])
         if sd:
