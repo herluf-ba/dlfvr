@@ -6,10 +6,11 @@ from display import printProgressBar
 
 def score_batch(model, loss_func, xb, yb, opt=None, logger=None):
     prediction = model.forward(xb)
-    should_log = logger and 'logger' in inspect.getargspec(loss_func).args
-    loss = loss_func(prediction, yb,
-                     logger=logger) if should_log else loss_func(
-                         prediction, yb)
+    if t.isnan(prediction).any():
+        print("DET ER NAN!")
+        print(f'{xb=}')
+
+    loss = loss_func(prediction, yb, logger=logger)
 
     if opt is not None:
         loss.backward()

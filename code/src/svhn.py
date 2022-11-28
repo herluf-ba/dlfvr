@@ -64,23 +64,17 @@ class SVHN(Dataset):
         return transformed_image, transformed_labels
 
 
-def into_resized(original, p):
-    return (p[0] / original[0] * 32 * S, p[1] / original[1] * 32 * S)
-
-
 def squared_distance(p1, p2):
     return (p2[0] - p1[0])**2 + (p2[1] - p1[1])**2
 
 
 def target_transform(img_size, labels):
-    # stfu computer if len(labels) > 4:
-    #    print(f"OH NOOOOO there are too many labels: {labels}")
-
-    out = torch.zeros((15, 2, 2))
+    img_height, img_width = img_size
+    out = torch.zeros((15, S, S))
 
     # Transform labels into resized space using img size
-    unassigned = [(1, *into_resized(img_size, (top, left)),
-                   *into_resized(img_size, (height, width)),
+    unassigned = [(1, left / img_width, top / img_height,
+                   (left + width) / img_width, (top + height) / img_height,
                    *(F.one_hot(torch.tensor(c - 1), num_classes=10)).numpy())
                   for (c, left, top, width, height) in labels]
 
@@ -89,13 +83,11 @@ def target_transform(img_size, labels):
         for y in range(S):
             if len(unassigned) > 0:
                 # Compute distance to cell center from unassigned labels
-                cell_center = into_resized(
-                    (1, 1), (x / S + half_cell, y / S + half_cell))
-
+                cell_center = (x / S + half_cell, y / S + half_cell)
                 distances = [
-                    squared_distance(cell_center,
-                                     (left + width / 2.0, top + height / 2.0))
-                    for (_, top, left, height, width, _, _, _, _, _, _, _, _,
+                    squared_distance(cell_center, ((left + right) / 2.0,
+                                                   (top + bottom) / 2.0))
+                    for (_, left, top, right, bottom, _, _, _, _, _, _, _, _,
                          _, _) in unassigned
                 ]
 
@@ -108,7 +100,6 @@ def target_transform(img_size, labels):
                     out[i][x][y] = closest[i]
 
                 del unassigned[closest_i]
-
     return out
 
 
