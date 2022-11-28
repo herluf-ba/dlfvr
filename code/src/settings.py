@@ -89,7 +89,8 @@ def custom_loss(input_batch,
                 target_batch,
                 size_average=None,
                 reduce=None,
-                reduction="mean"):
+                reduction="mean",
+                logger=None):
 
     input_bb = batch_extract_bounding_box(input_batch)
     input_conf = batch_extract_confidence(input_batch)
@@ -110,6 +111,11 @@ def custom_loss(input_batch,
     confidence_loss = F.binary_cross_entropy(
         input_conf, target_conf)  #, weight=confidence_weights)
 
+    if logger:
+        logger.add_loss_item("Confidence", confidence_loss.item())
+        logger.add_loss_item("Bounding box", bb_loss.item())
+        logger.add_loss_item("Classes", classes_loss.item())
+
     return classes_loss + bb_loss + confidence_loss
 
 
@@ -117,7 +123,8 @@ def custom_loss_with_iou(input_batch,
                          target_batch,
                          size_average=None,
                          reduce=None,
-                         reduction="mean"):
+                         reduction="mean",
+                         logger=None):
 
     input_bb = batch_extract_bounding_box(input_batch)
     input_conf = batch_extract_confidence(input_batch)
@@ -140,6 +147,11 @@ def custom_loss_with_iou(input_batch,
     bb_loss = complete_box_iou_loss(input_bb, target_bb, reduction='mean')
     confidence_loss = F.binary_cross_entropy(
         input_conf, target_conf)  #, weight=confidence_weights)
+
+    if logger:
+        logger.add_loss_item("Confidence", confidence_loss.item())
+        logger.add_loss_item("Bounding box", bb_loss.item())
+        logger.add_loss_item("Classes", classes_loss.item())
 
     return classes_loss + bb_loss + confidence_loss
 
