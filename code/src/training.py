@@ -1,7 +1,6 @@
 import torch as t
 import numpy as np
 from display import printProgressBar
-from svhn import batch_extract_classes
 
 
 def loss_batch(model, loss_func, xb, yb, opt=None):

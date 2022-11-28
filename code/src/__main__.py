@@ -9,11 +9,10 @@ from torchvision.transforms import Compose, Grayscale, Resize, Lambda, ToTensor
 from torchvision.io import read_image
 import numpy as np
 
-from svhn import SVHN, transform, target_transform, batch_extract_classes, batch_extract_confidence
+from svhn import SVHN, transform, target_transform
 from display import plot_loss_history, plot_img
 from training import fit
-from settings import S, MODELS, LOSS_FUNCTIONS
-from custom_loss import custom_loss
+from settings import S, MODELS, LOSS_FUNCTIONS, batch_extract_classes, batch_extract_confidence
 
 if __name__ == '__main__':
     # Setup argument parser
@@ -88,7 +87,7 @@ if __name__ == '__main__':
         momentum = float(args.momentum)
         batch_size = int(args.batch_size)
         epochs = int(args.epochs)
-        loss_func = custom_loss  #LOSS_FUNCTIONS[args.loss_func] #Hardcoded this while testing. Circular import bullshittery.
+        loss_func = LOSS_FUNCTIONS[args.loss_func] #Hardcoded this while testing. Circular import bullshittery.
 
         print("Training on device:", device)
         print(

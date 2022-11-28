@@ -1,7 +1,89 @@
-from torch import Tensor
+import torch 
 from torch.nn.functional import mse_loss, cross_entropy
 from base_model import BaseModel
+import torch.nn.functional as F
 
+# All of this jazz is located here to avoid circular imports. Too bad. 
+class attribute:
+    CONFIDENCE = 0
+    LEFT = 1
+    TOP = 2
+    WIDTH = 3
+    HEIGHT = 4
+    CLASSES = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+
+def batch_extract(tensor_batch, indicies):
+    device = torch.device(
+        'cuda') if torch.cuda.is_available() else torch.device('cpu')
+    
+    indicies = torch.tensor(indicies).to(device)
+    extracted_tensor = torch.index_select(tensor_batch, 1, indicies)
+    extracted_tensor = extracted_tensor.reshape(-1, S * S, S*S)
+    return extracted_tensor.mT
+
+
+def batch_extract_confidence(tensor_batch):
+    device = torch.device(
+        'cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+    indicies = torch.tensor([attribute.CONFIDENCE]).to(device)
+    extracted_confidences = torch.index_select(tensor_batch, 1, indicies)
+    extracted_confidences = extracted_confidences.reshape(-1, S * S)
+    return extracted_confidences
+
+
+def batch_extract_bounding_box(tensor_batch):
+    return batch_extract(
+        tensor_batch,
+        [attribute.LEFT, attribute.TOP, attribute.WIDTH, attribute.HEIGHT])
+
+
+def batch_extract_classes(tensor_batch):
+    device = torch.device(
+        'cuda') if torch.cuda.is_available() else torch.device('cpu')
+    
+    indicies = torch.tensor(attribute.CLASSES).to(device)
+    extracted_classes = torch.index_select(tensor_batch, 1, indicies)
+    extracted_classes = extracted_classes.reshape(-1, 10, S * S)
+    return extracted_classes.mT
+
+
+def batch_items_matches_shape(tensor, correct_shape):
+    tensor_shape = tensor.shape[1:] if is_batched(tensor) else tensor.shape
+    return tensor.shape == correct_shape
+
+
+# https://www.dailydot.com/wp-content/uploads/eba/cb/skitched-20161229-112404.jpg
+# Is this?
+def custom_loss(input_batch,
+                target_batch,
+                size_average=None,
+                reduce=None,
+                reduction="mean"):
+
+    input_bb = batch_extract_bounding_box(input_batch)
+    input_conf = batch_extract_confidence(input_batch)
+    input_classes = batch_extract_classes(input_batch)
+
+
+    target_conf = batch_extract_confidence(target_batch)
+    target_bb = batch_extract_bounding_box(target_batch)
+    target_classes = batch_extract_classes(target_batch)
+
+    # TODO: I'm a bit in doubt whether this filter works correctly
+    conf_filter = target_conf > 0
+    target_classes = target_classes[conf_filter]
+    input_classes = input_classes[conf_filter]
+    
+    classes_loss = F.cross_entropy(input_classes, target_classes)
+    bb_loss = F.mse_loss(input_bb, target_bb)
+
+    confidence_loss = F.binary_cross_entropy(input_conf, target_conf)#, weight=confidence_weights)
+
+    return classes_loss + bb_loss + confidence_loss
+
+# Actual settings 
 S = 2
 MODELS = {"base": BaseModel, "skipper": None}
-LOSS_FUNCTIONS = {"mse": mse_loss}
+LOSS_FUNCTIONS = {"mse": mse_loss, "custom_loss": custom_loss}
