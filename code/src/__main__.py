@@ -113,15 +113,16 @@ if __name__ == '__main__':
                               lr=learning_rate,
                               momentum=momentum)
 
-        train_loss_hist, val_loss_hist = fit(model, epochs, loss_func, opt,
-                                             train, test, device)
+        train_loss_hist, val_loss_hist, train_iou_hist, val_iou_hist = fit(
+            model, epochs, loss_func, opt, train, test, device)
 
         ## Save trained model
-        if (args.save_path is not None):
-            print(f"Saving state dict to path: '{args.save_path}'")
-            torch.save(model.state_dict(), args.save_path)
+        if (args.save is not None):
+            print(f"Saving state dict to path: '{args.save}'")
+            torch.save(model.state_dict(), args.save)
 
-        plot_loss_history(train_loss_hist, val_loss_hist)
+        plot_loss_history(train_loss_hist, val_loss_hist, train_iou_hist,
+                          val_iou_hist)
 
     ## Produce a predict if configured to do so
     predict_image_path = args.predict
