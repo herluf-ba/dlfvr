@@ -1,9 +1,11 @@
-import torch 
+import torch
 from torch.nn.functional import mse_loss, cross_entropy
 from base_model import BaseModel
 import torch.nn.functional as F
+from torchvision.ops import complete_box_iou_loss
 
-# All of this jazz is located here to avoid circular imports. Too bad. 
+
+# All of this jazz is located here to avoid circular imports. Too bad.
 class attribute:
     CONFIDENCE = 0
     LEFT = 1
@@ -16,10 +18,10 @@ class attribute:
 def batch_extract(tensor_batch, indicies):
     device = torch.device(
         'cuda') if torch.cuda.is_available() else torch.device('cpu')
-    
+
     indicies = torch.tensor(indicies).to(device)
     extracted_tensor = torch.index_select(tensor_batch, 1, indicies)
-    extracted_tensor = extracted_tensor.reshape(-1, S * S, S*S)
+    extracted_tensor = extracted_tensor.reshape(-1, S * S, S * S)
     return extracted_tensor.mT
 
 
@@ -42,7 +44,7 @@ def batch_extract_bounding_box(tensor_batch):
 def batch_extract_classes(tensor_batch):
     device = torch.device(
         'cuda') if torch.cuda.is_available() else torch.device('cpu')
-    
+
     indicies = torch.tensor(attribute.CLASSES).to(device)
     extracted_classes = torch.index_select(tensor_batch, 1, indicies)
     extracted_classes = extracted_classes.reshape(-1, 10, S * S)
@@ -52,6 +54,20 @@ def batch_extract_classes(tensor_batch):
 def batch_items_matches_shape(tensor, correct_shape):
     tensor_shape = tensor.shape[1:] if is_batched(tensor) else tensor.shape
     return tensor.shape == correct_shape
+
+
+def batch_transform_box_coordinates(boxes):
+    LEFT = 0
+    TOP = 1
+    WIDTH = 2
+    HEIGHT = 3
+    RIGHT = 2
+    BOTTOM = 3
+
+    boxes = torch.clamp(boxes, min=0.0)
+    boxes[:, RIGHT] = torch.add(boxes[:, LEFT], boxes[:, WIDTH])
+    boxes[:, BOTTOM] = torch.add(boxes[:, TOP], boxes[:, HEIGHT])
+    return boxes
 
 
 # https://www.dailydot.com/wp-content/uploads/eba/cb/skitched-20161229-112404.jpg
@@ -66,24 +82,60 @@ def custom_loss(input_batch,
     input_conf = batch_extract_confidence(input_batch)
     input_classes = batch_extract_classes(input_batch)
 
+    target_conf = batch_extract_confidence(target_batch)
+    target_bb = batch_extract_bounding_box(target_batch)
+    target_classes = batch_extract_classes(target_batch)
+
+    # Filter off predictions predictions:for labels that have zero confidence (Theres no ground truth label)
+    conf_filter = target_conf > 0
+    target_classes = target_classes[conf_filter]
+    input_classes = input_classes[conf_filter]
+
+    classes_loss = F.cross_entropy(input_classes, target_classes)
+    bb_loss = F.mse_loss(input_bb, target_bb)
+
+    confidence_loss = F.binary_cross_entropy(
+        input_conf, target_conf)  #, weight=confidence_weights)
+
+    return classes_loss + bb_loss + confidence_loss
+
+
+def custom_loss_with_iou(input_batch,
+                         target_batch,
+                         size_average=None,
+                         reduce=None,
+                         reduction="mean"):
+
+    input_bb = batch_extract_bounding_box(input_batch)
+    input_conf = batch_extract_confidence(input_batch)
+    input_classes = batch_extract_classes(input_batch)
 
     target_conf = batch_extract_confidence(target_batch)
     target_bb = batch_extract_bounding_box(target_batch)
     target_classes = batch_extract_classes(target_batch)
 
-    # TODO: I'm a bit in doubt whether this filter works correctly
+    # Filter off predictions for labels that have zero confidence (Theres no ground truth label)
     conf_filter = target_conf > 0
     target_classes = target_classes[conf_filter]
     input_classes = input_classes[conf_filter]
-    
-    classes_loss = F.cross_entropy(input_classes, target_classes)
-    bb_loss = F.mse_loss(input_bb, target_bb)
 
-    confidence_loss = F.binary_cross_entropy(input_conf, target_conf)#, weight=confidence_weights)
+    # Transform left,top,width,height boxes to left,top,right,bottom boxes for iou loss
+    target_bb = batch_transform_box_coordinates(target_bb[conf_filter])
+    input_bb = batch_transform_box_coordinates(input_bb[conf_filter])
+
+    classes_loss = F.cross_entropy(input_classes, target_classes)
+    bb_loss = complete_box_iou_loss(input_bb, target_bb, reduction='mean')
+    confidence_loss = F.binary_cross_entropy(
+        input_conf, target_conf)  #, weight=confidence_weights)
 
     return classes_loss + bb_loss + confidence_loss
 
-# Actual settings 
+
+# Actual settings
 S = 2
 MODELS = {"base": BaseModel, "skipper": None}
-LOSS_FUNCTIONS = {"mse": mse_loss, "custom_loss": custom_loss}
+LOSS_FUNCTIONS = {
+    "mse": mse_loss,
+    "custom_loss": custom_loss,
+    "custom_loss_with_iou": custom_loss_with_iou
+}

@@ -87,7 +87,9 @@ if __name__ == '__main__':
         momentum = float(args.momentum)
         batch_size = int(args.batch_size)
         epochs = int(args.epochs)
-        loss_func = LOSS_FUNCTIONS[args.loss_func] #Hardcoded this while testing. Circular import bullshittery.
+        loss_func = LOSS_FUNCTIONS[
+            args.
+            loss_func]  #Hardcoded this while testing. Circular import bullshittery.
 
         print("Training on device:", device)
         print(
@@ -111,18 +113,18 @@ if __name__ == '__main__':
         # Train model
         opt = torch.optim.SGD(model.parameters(),
                               lr=learning_rate,
-                              momentum=momentum
-                              )
+                              momentum=momentum)
 
-        train_loss_hist, val_loss_hist = fit(model, epochs, loss_func, opt,
-                                             train, test, device)
+        train_loss_hist, val_loss_hist, train_iou_hist, val_iou_hist = fit(
+            model, epochs, loss_func, opt, train, test, device)
 
         ## Save trained model
         if (args.save):
             print(f"Saving state dict to path: '{args.save}'")
             torch.save(model.state_dict(), args.save)
 
-        plot_loss_history(train_loss_hist, val_loss_hist)
+        plot_loss_history(train_loss_hist, val_loss_hist, train_iou_hist,
+                          val_iou_hist)
 
     ## Produce a predict if configured to do so
     predict_image_path = args.predict
@@ -133,9 +135,9 @@ if __name__ == '__main__':
 
         classes = batch_extract_classes(labels)
         confidences = batch_extract_confidence(labels)
-        
-        # Move back to cpu for plotting 
-        image = image.cpu(); 
+
+        # Move back to cpu for plotting
+        image = image.cpu()
         labels = labels.cpu()
 
         # detach for numpy functions in libraries to work with tensors

@@ -117,5 +117,3 @@ transform = Compose([
     Grayscale(),
     Resize((32 * S, 32 * S)),
 ])
-
-
