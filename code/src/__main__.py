@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
         logger.plot_loss_items(logger.history.keys(),
                                title=f'Loss over {args.epochs} epochs')
-
+        logger.dump_to_csv()
         #logger.plot_loss_items(['Validation loss', 'Training loss'],
         #                       title=f"Loss over {args.epochs} epochs")
         #logger.plot_loss_items(['Validation IoU', 'Training IoU'],

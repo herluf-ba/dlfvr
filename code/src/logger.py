@@ -6,13 +6,14 @@ class Logger:
     mode = 'val'
     current_epoch = {}
     history = {}
+    epochs = 0
 
     def set_mode(self, mode):
         assert mode in ['val', 'train']
         self.mode = mode
 
     def add_loss_item(self, _name, item):
-        prefix = "Validation " if self.mode is 'val' else "Train "
+        prefix = "Validation " if self.mode == 'val' else "Train "
         name = f'{prefix}{_name}'
 
         if name in self.current_epoch.keys():
@@ -37,6 +38,7 @@ class Logger:
 
         ## Clear for next epoch
         self.current_epoch = {}
+        self.epochs += 1
 
     def plot_loss_items(self, names, title=""):
         plt.title(title)
@@ -50,3 +52,12 @@ class Logger:
             plt.legend()
 
         plt.show()
+
+    def dump_to_csv(self, path="./history.csv"):
+        with open(path, "w") as csv:
+            csv.write("epoch," + ",".join(self.history.keys()) + '\n')
+            values = np.transpose(list(self.history.values()))
+            csv.write("\n".join([
+                ",".join(map(str, [epoch, *metrics]))
+                for (epoch, metrics) in enumerate(values)
+            ]))
