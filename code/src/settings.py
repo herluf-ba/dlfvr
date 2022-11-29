@@ -133,10 +133,6 @@ def custom_loss_with_iou(input_batch,
                          reduction="mean",
                          logger=None):
 
-    #print(f'{torch.isnan(input_batch).any()=}')
-    #print(f'{torch.isnan(target_batch).any()=}')
-    #print(f'{target_batch=}')
-
     input_bb = batch_extract_bounding_box(input_batch)
     input_conf = batch_extract_confidence(input_batch)
     input_classes = batch_extract_classes(input_batch)
@@ -145,27 +141,18 @@ def custom_loss_with_iou(input_batch,
     target_bb = batch_extract_bounding_box(target_batch)
     target_classes = batch_extract_classes(target_batch)
 
-    #print(f'{input_bb=}')
-    #print(f'{target_conf=}')
-    #print(f'{target_bb=}')
-    #print(f'{target_classes=}')
-
     # Filter off predictions for labels that have zero confidence (Theres no ground truth label)
     conf_filter = target_conf > 0
     target_classes = target_classes[conf_filter]
     input_classes = input_classes[conf_filter]
 
-    # Transform left,top,width,height boxes to left,top,right,bottom boxes for iou loss
-    target_bb = batch_transform_box_coordinates(target_bb[conf_filter])
-    input_bb = batch_transform_box_coordinates(input_bb[conf_filter])
-
-    #print(f'{input_bb=}')
-    #print(f'{target_bb=}')
+    target_bb = target_bb[conf_filter]
+    input_bb = input_bb[conf_filter]
 
     classes_loss = F.cross_entropy(input_classes, target_classes)
     bb_loss = complete_box_iou_loss(input_bb, target_bb, reduction='mean')
     confidence_loss = F.binary_cross_entropy_with_logits(
-        input_conf, target_conf)  # with logits version more numerically stable acc. docs.
+        input_conf, target_conf)  
 
     if logger:
         logger.add_loss_item("Confidence", confidence_loss.item())
