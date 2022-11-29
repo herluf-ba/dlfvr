@@ -178,10 +178,6 @@ def custom_loss_with_iou(input_batch,
         print(f'{classes_loss.item()=}')
         print(f'{bb_loss.item()=}')
         print(f'{confidence_loss.item()=}')
-        print(f'{input_bb=}')
-        print(f'{input_classes=}')
-        print(f'{input_conf=}')
-        exit()
 
     return classes_loss + bb_loss + confidence_loss
 
