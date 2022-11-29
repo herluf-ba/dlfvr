@@ -69,13 +69,15 @@ if __name__ == '__main__':
         "--model",
         help=f'CNN Model to be used [{", ".join(MODELS.keys())}]',
         default="base")
+    argparser.add_argument('-wi',"--weight-init", default=None, help="The method used for initializing weight of parametized layers")
 
     args = argparser.parse_args()
 
     device = torch.device(
         'cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-    model = MODELS[args.model]().to(device)
+    model_class = MODELS[args.model]
+    model = model_class(weight_init=args.weight_init).to(device)
 
     # Load weights if given
     load_path = args.load
@@ -120,7 +122,7 @@ if __name__ == '__main__':
                               momentum=momentum)
 
         # Find path to save artifacts of training to 
-        fingerprint = f'{args.loss_func}-{split}-e_{epochs}-bs_{batch_size}-mom_{momentum}-lr_{learning_rate}'
+        fingerprint = f'{args.loss_func}-{split}-e_{epochs}-bs_{batch_size}-mom_{momentum}-lr_{learning_rate}-wi_{args.weight_init}'
         save_path = f'runs/{fingerprint}'
         i = 0; 
         while os.path.exists(save_path): 
