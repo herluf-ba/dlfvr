@@ -58,8 +58,3 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device, logger):
             print('Calculating training loss ')
             logger.set_mode('train')
             score(train_dl)
-
-            print(logger.history)
-
-        
-
