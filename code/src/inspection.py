@@ -16,6 +16,7 @@ def get_layer_data(model):
 
     gradients = []
     layer_names = []
+    weights = []
 
     with torch.no_grad():
         for name, param in model.named_parameters():
@@ -24,10 +25,12 @@ def get_layer_data(model):
             if param.requires_grad and param_type.startswith('w'):
                 layer_names.append(name)
                 gradients.append(param.grad)
+                weights.append(param)
+                
 
         #activations = model.activations()
         activations = None  
-    return layer_names, activations, gradients
+    return layer_names, activations, gradients, weights
 
 
 def get_layer_stats(x,absolute=False):
@@ -65,13 +68,13 @@ def plot_hist(hs, layer_names, xrange=(-1,1),avg=None,sd=None):
         plot_hist(activations,xrange=None,avg=activation_mean,sd=activation_std)
         plt.show()
     '''
-    plt.figure(figsize=(20,60))
+    plt.figure(figsize=(120,10))
     for layer in range(len(hs)):
-        plt.subplot(int(len(hs)/2),3,layer+1)
+        plt.subplot(1,len(hs),layer+1)
         activations = hs[layer].detach().cpu().numpy().flatten()
         plt.hist(activations, bins=20, range=xrange)
 
-        title = "-".join((layer_names[layer]).split('.')[:-1]) # encoded.06.weights -> encoded-06
+        title = layer_names[layer] 
         if avg:
           title += '\n' + "mean {0:.2f}".format(avg[layer])
         if sd:

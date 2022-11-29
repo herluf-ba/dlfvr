@@ -57,10 +57,22 @@ class Logger:
         plt.close('all') # Clear for future plotting
 
     def diagnose_model(self, model, save_suffix=''): 
-        layer_names, activations, gradients = get_layer_data(model); 
+        layer_names, activations, gradients, weights = get_layer_data(model); 
         gradient_mean, gradient_std = get_layer_stats(gradients, absolute=True)
+        weights_mean, weights_std = get_layer_stats(weights)
+        
+        # Add save suffix to each layer name
+        layer_names = [f'{layer_name}{save_suffix}' for layer_name in layer_names]
+        
+        # Plot weights
+        plot_hist(weights, layer_names, xrange=None,avg=gradient_mean,sd=gradient_std)
+        plt.savefig(f'{self.save_path}/weights_histogram{save_suffix}.png')
+        plt.close('all') # Clear for future plotting
 
-        plot_hist(gradients, layer_names, xrange=None,avg=gradient_mean,sd=gradient_std)
+        # Plot gradients
+        gradient_layer_names = [layer_name.replace('weight','gradient') for layer_name in layer_names] # encoded.06.weights -> encoded.06.gradients
+        plot_hist(gradients, gradient_layer_names, xrange=None,avg=gradient_mean,sd=gradient_std)
         plt.savefig(f'{self.save_path}/gradients_histogram{save_suffix}.png')
         plt.close('all') # Clear for future plotting
+
 
