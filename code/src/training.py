@@ -7,11 +7,7 @@ from inspection import plot_grad_flow
 
 def score_batch(model, loss_func, xb, yb, opt=None, logger=None, diagnoser=None, epoch=None):
     prediction = model.forward(xb)
-
-    should_log = logger and 'logger' in inspect.getargspec(loss_func).args
-    loss = loss_func(prediction, yb,
-                     logger=logger) if should_log else loss_func(
-                         prediction, yb)
+    loss = loss_func(prediction, yb, logger=logger)
 
     if opt is not None:
         loss.backward()

@@ -141,20 +141,17 @@ if __name__ == '__main__':
 
         logger.plot_loss_items(logger.history.keys(),
                                title=f'Loss over {args.epochs} epochs')
+        logger.dump_to_csv()
 
     ## Produce a predict if configured to do so
     predict_image_path = args.predict
     if (predict_image_path is not None):
-        image = transform(read_image(predict_image_path))
-        image = image.unsqueeze(dim=0).to(device)
-        labels = model.forward(image)
-
-        classes = batch_extract_classes(labels)
-        confidences = batch_extract_confidence(labels)
+        raw = read_image(predict_image_path)
+        image = transform(raw).unsqueeze(dim=0).to(device)
+        predictions = model.forward(image)
 
         # Move back to cpu for plotting
-        image = image.cpu()
-        labels = labels.cpu()
+        predictions = predictions.cpu()
 
         # detach for numpy functions in libraries to work with tensors
-        plot_img(image[0].detach(), labels[0].detach(), conf_threshold=0.0)
+        plot_img(raw, predictions[0].detach(), conf_threshold=0.0)

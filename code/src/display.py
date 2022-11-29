@@ -51,21 +51,30 @@ def plot_img_vanilla(image, labels):
     plt.show()
 
 
-def plot_img(image, labels, conf_threshold=0):
+def plot_img(image, predictions, conf_threshold=0):
     '''Plots a transformed image with labels'''
+    channels, img_height, img_width = image.shape
+    print(f'{image.shape=}')
+
     fig, ax = plt.subplots()
     ax.imshow(image.numpy().transpose([1, 2, 0]), cmap='gray')
+    print(predictions)
 
-    for x in range(labels.shape[1]):
-        for y in range(labels.shape[2]):
+    for x in range(predictions.shape[1]):
+        for y in range(predictions.shape[2]):
             # Ignore bounding box if below confidence threshold
-            conf = labels[0][x][y]
+            conf = predictions[0][x][y]
             if (conf < conf_threshold):
                 break
-            top = labels[1][x][y]
-            left = labels[2][x][y]
-            width = labels[4][x][y]
-            height = labels[3][x][y]
+
+            left = predictions[1][x][y] * img_width
+            top = predictions[2][x][y] * img_height
+            right = predictions[3][x][y] * img_width
+            bottom = predictions[4][x][y] * img_height
+            width = right - left
+            height = bottom - top
+            print(f'{left=} {right=} {width=} {height=}')
+
             ax.add_patch(
                 patches.Rectangle((left, top),
                                   width,
@@ -73,21 +82,4 @@ def plot_img(image, labels, conf_threshold=0):
                                   linewidth=1,
                                   edgecolor='r',
                                   facecolor='none'))
-    plt.show()
-
-
-def plot_loss_history(train_loss_hist, val_loss_hist, train_iou_hist,
-                      val_iou_hist):
-    epochs = list(range(len(train_loss_hist)))
-
-    plt.title = f"Loss ({epochs} epochs)"
-    plt.plot(epochs, train_loss_hist, label='Training loss')
-    plt.plot(epochs, val_loss_hist, label='Validation loss')
-    plt.legend()
-    plt.show()
-
-    plt.title = f"IoU ({epochs} epochs)"
-    plt.plot(epochs, train_iou_hist, label='Training IoU')
-    plt.plot(epochs, val_iou_hist, label='Validation IoU')
-    plt.legend()
     plt.show()
