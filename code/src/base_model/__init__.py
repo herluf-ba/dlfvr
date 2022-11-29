@@ -42,7 +42,7 @@ class BaseModel(nn.Module):
             nn.Conv2d(in_channels=16,
                       out_channels=1,
                       kernel_size=1,
-                      padding="same"), nn.Sigmoid())
+                      padding="same")) #TODO: it was originally: nn.Sigmoid()
 
         # bounding_box: for each cell find bounding coordinates for element if present
         self.bounding_box = nn.Sequential(
@@ -77,7 +77,7 @@ class BaseModel(nn.Module):
                       out_channels=10,
                       kernel_size=1,
                       padding="same"),
-            #nn.Softmax(dim=1) # TODO: Find a way to softmax here. We need it when doing predictions
+                      #nn.Softmax(dim=1) # TODO: Find a way to softmax here. We need it when doing predictions
                       ) 
         
         # Initialize weights 

@@ -15,10 +15,10 @@ def score_batch(model, loss_func, xb, yb, opt=None, logger=None, diagnoser=None,
 
     if opt is not None:
         loss.backward()
-        plot_grad_flow(model.named_parameters())
+        #plot_grad_flow(model.named_parameters())
         # Gotta diagnose right after backward - grad is calculated here
-        #if diagnoser: 
-        #    diagnoser.diagnose_model(model, save_suffix=f'_e{epoch}') 
+        if diagnoser: 
+            diagnoser.diagnose_model(model, save_suffix=f'_e{epoch}') 
         opt.step()
         opt.zero_grad()
 
@@ -62,6 +62,8 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device, logger):
             print('Calculating training loss ')
             logger.set_mode('train')
             score(train_dl)
+
+            print(logger.history)
 
         
 

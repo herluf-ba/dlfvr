@@ -1,5 +1,3 @@
-# TODO: Do we somehow normalize labels? I do not think we should do that.
-# TODO: Get the predicted class in "plot_img" to label each bounding box
 import os 
 import argparse
 import torch
@@ -134,7 +132,7 @@ if __name__ == '__main__':
         logger = Logger(save_path)
         fit(model, epochs, loss_func, opt, train, test, device, logger)
         
-        show_grad_flow()
+        #show_grad_flow()
 
         ## Save trained model
         if (args.save):

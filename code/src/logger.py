@@ -18,7 +18,7 @@ class Logger:
     def add_loss_item(self, _name, item):
         prefix = "Validation " if self.mode is 'val' else "Train "
         name = f'{prefix}{_name}'
-
+        
         if name in self.current_epoch.keys():
             self.current_epoch[name] = np.append(self.current_epoch[name],
                                                  item)

@@ -3,6 +3,7 @@ from torch.nn.functional import mse_loss, cross_entropy
 from base_model import BaseModel
 import torch.nn.functional as F
 from torchvision.ops import complete_box_iou_loss
+import math
 
 
 # All of this jazz is located here to avoid circular imports. Too bad.
@@ -108,13 +109,19 @@ def custom_loss(input_batch,
     classes_loss = F.cross_entropy(input_classes, target_classes)
     bb_loss = F.mse_loss(input_bb, target_bb)
 
-    confidence_loss = F.binary_cross_entropy(
+    confidence_loss = F.binary_cross_entropy_with_logits(
        input_conf, target_conf)  #, weight=confidence_weights)
 
     if logger:
         logger.add_loss_item("Confidence", confidence_loss.item())
         logger.add_loss_item("Bounding box", bb_loss.item())
         logger.add_loss_item("Classes", classes_loss.item())
+
+    print('----')
+    print(f'{classes_loss.item()=}')
+    print(f'{bb_loss.item()=}')
+    print(f'{confidence_loss.item()=}')
+
 
     return classes_loss + confidence_loss + bb_loss
 
@@ -145,13 +152,24 @@ def custom_loss_with_iou(input_batch,
 
     classes_loss = F.cross_entropy(input_classes, target_classes)
     bb_loss = complete_box_iou_loss(input_bb, target_bb, reduction='mean')
-    confidence_loss = F.binary_cross_entropy(
-        input_conf, target_conf)  #, weight=confidence_weights)
+    confidence_loss = F.binary_cross_entropy_with_logits(
+        input_conf, target_conf)  # with logits version more numerically stable acc. docs.
 
     if logger:
         logger.add_loss_item("Confidence", confidence_loss.item())
         logger.add_loss_item("Bounding box", bb_loss.item())
         logger.add_loss_item("Classes", classes_loss.item())
+
+    contains_nan = lambda x: x.isnan().any()
+    if (contains_nan(classes_loss) or contains_nan(bb_loss) or contains_nan(confidence_loss)): 
+        print('----')
+        print(f'{classes_loss.item()=}')
+        print(f'{bb_loss.item()=}')
+        print(f'{confidence_loss.item()=}')
+        print(f'{input_bb=}')
+        print(f'{input_classes=}')
+        print(f'{input_conf=}')
+        exit()
 
     return classes_loss + bb_loss + confidence_loss
 
