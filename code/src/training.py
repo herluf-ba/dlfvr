@@ -3,6 +3,7 @@ import torch.nn as nn
 import inspect
 import numpy as np
 from display import printProgressBar
+from inspection import plot_grad_flow
 
 def score_batch(model, loss_func, xb, yb, opt=None, logger=None, diagnoser=None, epoch=None):
     prediction = model.forward(xb)
@@ -14,9 +15,10 @@ def score_batch(model, loss_func, xb, yb, opt=None, logger=None, diagnoser=None,
 
     if opt is not None:
         loss.backward()
+        plot_grad_flow(model.named_parameters())
         # Gotta diagnose right after backward - grad is calculated here
-        if diagnoser: 
-            diagnoser.diagnose_model(model, save_suffix=f'_e{epoch}') 
+        #if diagnoser: 
+        #    diagnoser.diagnose_model(model, save_suffix=f'_e{epoch}') 
         opt.step()
         opt.zero_grad()
 

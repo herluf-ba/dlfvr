@@ -14,7 +14,8 @@ from svhn import SVHN, transform, target_transform
 from display import plot_img
 from training import fit
 from settings import S, MODELS, LOSS_FUNCTIONS, batch_extract_classes, batch_extract_confidence
-from logger import Logger
+from logger import Logger 
+from inspection import show_grad_flow
 
 if __name__ == '__main__':
     # Setup argument parser
@@ -132,6 +133,8 @@ if __name__ == '__main__':
 
         logger = Logger(save_path)
         fit(model, epochs, loss_func, opt, train, test, device, logger)
+        
+        show_grad_flow()
 
         ## Save trained model
         if (args.save):
