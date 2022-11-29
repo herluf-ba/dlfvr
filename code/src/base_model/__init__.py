@@ -77,8 +77,8 @@ class BaseModel(nn.Module):
                       out_channels=10,
                       kernel_size=1,
                       padding="same"),
-            # TODO: A bit in doubt whether dim is correct
-            nn.Softmax(dim=0)) #TODO: Are we double softmaxing???!
+            #nn.Softmax(dim=1) # TODO: Find a way to softmax here. We need it when doing predictions
+                      ) 
         
         # Initialize weights 
         if (weight_init is not None):
