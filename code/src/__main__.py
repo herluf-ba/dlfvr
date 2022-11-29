@@ -141,7 +141,7 @@ if __name__ == '__main__':
 
         logger.plot_loss_items(logger.history.keys(),
                                title=f'Loss over {args.epochs} epochs')
-        logger.dump_to_csv()
+        logger.dump_to_csv(path=f'{save_path}/history.csv')
 
     ## Produce a predict if configured to do so
     predict_image_path = args.predict
