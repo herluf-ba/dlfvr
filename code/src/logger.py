@@ -12,7 +12,6 @@ class Logger:
     # Stuff for tracking model data
     f_avg_gradients = None
     weight_layers = []
-    weights_per_batch = []
     epoch_gradients = []
 
     # Stuff for tracking metrics (loss, accuracy, etc)
@@ -51,21 +50,16 @@ class Logger:
             p.grad.abs().flatten().cpu() for name, p in self.model.named_parameters()
             if name in self.weight_layers
         ]
-
         self.epoch_gradients.append(grads)
-
-    def collect_weights(self):
-        weights = [
-            p for name, p, in self.model.named_parameters()
-            if name in self.weight_layers
-        ]
-        self.weights_per_batch.append(weights)
-
+ 
     def collect_model_data(self):
         self.collect_gradients()
-        self.collect_weights()
 
     def commit_epoch(self):
+        ## Save model histograms before clearing collected gradient data
+        self.weight_histogram()
+        self.gradient_histogram()
+
         ## Flush mean of metric to csv file
         if not self.f_metrics:
             self.f_metrics = open(f'{self.save_path}/metrics.csv', 'a+')
@@ -94,7 +88,7 @@ class Logger:
     def plot_metrics(self, title=""):
         self.f_metrics.seek(0)
         data = pandas.read_csv(self.f_metrics)
-        names = data.axes[1:]
+        names = data.axes[1][:1]
 
         plt.title(title)
         for name in names:
@@ -129,34 +123,42 @@ class Logger:
         plt.savefig(f'{self.save_path}/gradient_flow_{"_".join(include_decoders)}.png')
         plt.close('all')  # Clear for future plotting
 
-    def diagnose_model(self, model, save_suffix=''):
-        weight_layers, activations, gradients, weights = get_layer_data(model)
-        gradient_mean, gradient_std = get_layer_stats(gradients, absolute=True)
-        weights_mean, weights_std = get_layer_stats(weights)
-
-        # Add save suffix to each layer name
-        weight_layers = [
-            f'{layer_name}{save_suffix}' for layer_name in weight_layers
+    def weight_histogram(self):
+        weights = [
+            p.detach().cpu().numpy() for name, p, in self.model.named_parameters()
+            if name in self.weight_layers
         ]
+        means = [ws.mean().item() for ws in weights]
+        stds = [ws.std().item() for ws in weights]
 
         # Plot weights
-        plot_hist(weights,
-                  weight_layers,
-                  xrange=None,
-                  avg=gradient_mean,
-                  sd=gradient_std)
-        plt.savefig(f'{self.save_path}/weights_histogram{save_suffix}.png')
+        plt.figure(figsize=(120,10))
+        for i in range(len(weights)):
+            plt.subplot(1, len(weights), i + 1)
+            plt.hist(weights[i].flatten(), bins=20)
+            mean = '{0:0.2f}'.format(means[i])
+            std = '{0:0.4f}'.format(stds[i])
+            name = self.weight_layers[i].replace(".weight", "") 
+            plt.title(f'{name} mean: {mean} std: {std}')
+
+        plt.savefig(f'{self.save_path}/weights_histogram_e{self.epoch}.png')
         plt.close('all')  # Clear for future plotting
+    
+    def gradient_histogram(self):
+        gradients = self.epoch_gradients[-1]
+        means = [gs.abs().mean().item() for gs in gradients]
+        stds = [gs.std().item() for gs in gradients]
 
         # Plot gradients
-        gradient_weight_layers = [
-            layer_name.replace('weight', 'gradient')
-            for layer_name in weight_layers
-        ]  # encoded.06.weights -> encoded.06.gradients
-        plot_hist(gradients,
-                  gradient_weight_layers,
-                  xrange=None,
-                  avg=gradient_mean,
-                  sd=gradient_std)
-        plt.savefig(f'{self.save_path}/gradients_histogram{save_suffix}.png')
+        plt.figure(figsize=(120,10))
+        for i in range(len(gradients)):
+            plt.subplot(1, len(gradients), i + 1)
+            plt.hist(gradients[i], bins=20)
+            mean = '{0:0.2f}'.format(means[i])
+            std = '{0:0.4f}'.format(stds[i])
+            name = self.weight_layers[i].replace(".weight", "") 
+            plt.title(f'{name} mean: {mean} std: {std}')
+
+        plt.savefig(f'{self.save_path}/gradients_histogram_e{self.epoch}.png')
         plt.close('all')  # Clear for future plotting
+

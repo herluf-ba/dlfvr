@@ -6,7 +6,6 @@ from display import printProgressBar, bcolors
 from settings import batch_extract_classes
 from inspection import plot_grad_flow
 
-
 def score_batch(model,
                 loss_func,
                 xb,
@@ -78,6 +77,7 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device, logger):
                 printProgressBar(b, batch_count, prefix='Train loss ', barColor=bcolors.WARNING)
                 score_batch(model, loss_func, xb.to(device), yb.to(device), logger=logger, compute_metrics=True)
             printProgressBar(batch_count, batch_count, prefix='Train loss ', barColor=bcolors.WARNING)
+
 
         # Save epoch log data to logger history
         logger.commit_epoch()
