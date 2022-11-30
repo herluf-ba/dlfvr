@@ -124,8 +124,8 @@ if __name__ == '__main__':
             print(f"Saving state dict to path: '{args.save}'")
             torch.save(model.state_dict(), args.save)
 
-        logger.plot_loss_items(logger.history.keys(),
-                               title=f'Loss over {args.epochs} epochs')
+        logger.plot_loss_items(['Validation accuracy', "Train accuracy"],
+                               title=f'Accuracy over {args.epochs} epochs')
         logger.dump_to_csv()
 
     ## Produce a predict if configured to do so

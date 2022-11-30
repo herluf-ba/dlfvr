@@ -2,20 +2,28 @@ import torch as t
 import inspect
 import numpy as np
 from display import printProgressBar
+from settings import batch_extract_classes
 
 
 def score_batch(model, loss_func, xb, yb, opt=None, logger=None):
     prediction = model.forward(xb)
-    if t.isnan(prediction).any():
-        print("DET ER NAN!")
-        print(f'{xb=}')
-
     loss = loss_func(prediction, yb, logger=logger)
 
     if opt is not None:
         loss.backward()
         opt.step()
         opt.zero_grad()
+
+    if logger:
+        ## Compute accuracy for classes
+        target_classes = batch_extract_classes(yb).detach().numpy()
+        pred_classes = batch_extract_classes(prediction).detach().numpy()
+        true_positives = target_classes.argmax(axis=2) == pred_classes.argmax(
+            axis=2)
+        accuracy = true_positives.mean()
+        logger.add_loss_item("accuracy", accuracy)
+
+        ## TODO Compute accuracy for confidence
 
     return loss.item(), len(xb)
 
