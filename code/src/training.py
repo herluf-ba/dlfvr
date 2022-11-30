@@ -46,6 +46,8 @@ def score_batch(model,
 def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device, logger):
     batch_count = len(train_dl)
     batch_count_val = len(valid_dl)
+
+    ## TRAINING
     for epoch in range(epochs):
         epoch_prefix = f"Epoch: {epoch + 1} / {epochs}"
         model.train()
@@ -62,9 +64,9 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device, logger):
 
         printProgressBar(batch_count, batch_count, prefix=epoch_prefix)
 
+        ## CALCULATION LOSS
         model.eval()
         with t.no_grad():
-            #print('Calculating loss')
             logger.set_mode('val')
             for b, (xb, yb) in enumerate(valid_dl):
                 printProgressBar(b, batch_count_val, prefix='Val loss ', barColor=bcolors.OKCYAN)
@@ -77,5 +79,18 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device, logger):
                 score_batch(model, loss_func, xb.to(device), yb.to(device), logger=logger, compute_metrics=True)
             printProgressBar(batch_count, batch_count, prefix='Train loss ', barColor=bcolors.WARNING)
 
-            ## Save epoch log data to logger history
+            # Save epoch log data to logger history
             logger.commit_epoch()
+        
+        ## Save model 
+        t.save(model.state_dict(), f'{logger.save_path}/weights/{epoch}')
+
+        ## PLOT PROGRESS
+        #logger.plot_gradient_flow(include_decoders=['confidence'])
+        #logger.plot_gradient_flow(include_decoders=['bounding_box'])
+        #logger.plot_gradient_flow(include_decoders=['classes'])
+        #logger.plot_metrics(logger.metrics.keys(), title=f'Loss over {epoch + 1} epochs')
+        
+        ## Save metrics and avg gradients to csv files
+        logger.dump_avg_gradients_to_csv()
+
