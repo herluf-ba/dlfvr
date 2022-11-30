@@ -29,12 +29,12 @@ def score_batch(model,
 
     if compute_metrics:
         # Compute accuracy for classes
-        target_classes = batch_extract_classes(yb).detach().numpy()
-        pred_classes = batch_extract_classes(prediction).detach().numpy()
+        target_classes = batch_extract_classes(yb)
+        pred_classes = batch_extract_classes(prediction)
         true_positives = target_classes.argmax(axis=2) == pred_classes.argmax(
             axis=2)
-        accuracy = true_positives.mean()
-        logger.add_metric("accuracy", accuracy)
+        accuracy = true_positives.mean(dtype=t.float)
+        logger.add_metric("accuracy", accuracy.cpu())
 
         ## TODO Compute accuracy for confidence
 
