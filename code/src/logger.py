@@ -1,8 +1,6 @@
 import pandas
 import numpy as np
 import matplotlib.pyplot as plt
-from inspection import get_layer_data, get_layer_stats, plot_hist
-
 
 class Logger:
     mode = 'val'

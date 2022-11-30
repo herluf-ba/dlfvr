@@ -4,7 +4,6 @@ import inspect
 import numpy as np
 from display import printProgressBar, bcolors
 from settings import batch_extract_classes
-from inspection import plot_grad_flow
 
 def score_batch(model,
                 loss_func,

@@ -13,7 +13,6 @@ from display import plot_img
 from training import fit
 from settings import S, MODELS, LOSS_FUNCTIONS, batch_extract_classes, batch_extract_confidence
 from logger import Logger
-from inspection import show_grad_flow
 
 if __name__ == '__main__':
     # Setup argument parser
