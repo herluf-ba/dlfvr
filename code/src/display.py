@@ -23,13 +23,14 @@ def printProgressBar(iteration,
                      decimals=1,
                      length=50,
                      fill='━',
-                     printEnd="\r"):
+                     printEnd="\r",
+                     barColor=bcolors.PURPLE):
     '''Print iterations progress'''
     percent = ("{0:." + str(decimals) + "f}").format(
         100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
-    bar = f"{bcolors.PURPLE}{fill * filledLength}{bcolors.BG}{'━' * (length - filledLength)}{bcolors.ENDC}"
-    print(f'\r {prefix} {bar} {percent}% {suffix}', end=printEnd)
+    bar = f"{barColor}{fill * filledLength}{bcolors.BG}{'━' * (length - filledLength)}{bcolors.ENDC}"
+    print(f'\r {prefix}\t{bar} {percent}% {suffix}', end=printEnd)
     # Print New Line on Complete
     if iteration == total:
         print()

@@ -133,19 +133,19 @@ if __name__ == '__main__':
             save_path = f'runs/{fingerprint}_{i}'
         os.mkdir(save_path)
 
-        logger = Logger(save_path)
+        logger = Logger(save_path, model)
         fit(model, epochs, loss_func, opt, train, test, device, logger)
-
-        #show_grad_flow()
 
         ## Save trained model
         if (args.save):
             print(f"Saving state dict to path: '{args.save}'")
             torch.save(model.state_dict(), args.save)
-
-        logger.plot_loss_items(logger.history.keys(),
-                               title=f'Loss over {args.epochs} epochs')
-        logger.dump_to_csv(path=f'{save_path}/history.csv')
+        
+        logger.plot_gradient_flow()
+        logger.plot_metrics(logger.metrics.keys(),
+                            title=f'Loss over {args.epochs} epochs')
+        logger.dump_metrics_to_csv(path=f'{save_path}/history.csv')
+        logger.dump_avg_gradients_to_csv(path=f'{save_path}/avg_grads.csv')
 
     ## Produce a predict if configured to do so
     predict_image_path = args.predict
