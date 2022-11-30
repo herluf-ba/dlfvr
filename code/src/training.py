@@ -1,19 +1,20 @@
 import torch as t
+import torch.nn as nn
 import inspect
 import numpy as np
 from display import printProgressBar
+from inspection import plot_grad_flow
 
-
-def score_batch(model, loss_func, xb, yb, opt=None, logger=None):
+def score_batch(model, loss_func, xb, yb, opt=None, logger=None, diagnoser=None, epoch=None):
     prediction = model.forward(xb)
-    if t.isnan(prediction).any():
-        print("DET ER NAN!")
-        print(f'{xb=}')
-
     loss = loss_func(prediction, yb, logger=logger)
 
     if opt is not None:
         loss.backward()
+        #plot_grad_flow(model.named_parameters())
+        # Gotta diagnose right after backward - grad is calculated here
+        if diagnoser: 
+            diagnoser.diagnose_model(model, save_suffix=f'_e{epoch}') 
         opt.step()
         opt.zero_grad()
 
@@ -41,12 +42,15 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device, logger):
         for batch_i, (xb, yb) in enumerate(train_dl):
             printProgressBar(batch_i, batch_count, prefix=epoch_prefix)
             xb, yb = xb.to(device), yb.to(device)
-            score_batch(model, loss_func, xb, yb, opt, logger=None)
+            # Diagnose on last batch of epoch
+            diagnoser = logger if len(train_dl ) - 1 == batch_i else None
+            score_batch(model, loss_func, xb, yb, opt, logger=None, diagnoser=diagnoser, epoch=epoch)
 
         printProgressBar(batch_count, batch_count, prefix=epoch_prefix)
 
         model.eval()
         with t.no_grad():
+
             print('Calculating validation loss')
             logger.set_mode('val')
             score(valid_dl)
