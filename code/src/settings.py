@@ -117,11 +117,6 @@ def custom_loss(input_batch,
         logger.add_metric("Bounding box", bb_loss.item())
         logger.add_metric("Classes", classes_loss.item())
 
-    print('----')
-    print(f'{classes_loss.item()=}')
-    print(f'{bb_loss.item()=}')
-    print(f'{confidence_loss.item()=}')
-
     return classes_loss + confidence_loss + bb_loss
 
 
