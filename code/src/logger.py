@@ -1,3 +1,4 @@
+import pandas
 import numpy as np
 import matplotlib.pyplot as plt
 from inspection import get_layer_data, get_layer_stats, plot_hist
@@ -12,7 +13,7 @@ class Logger:
     f_avg_gradients = None
     weight_layers = []
     weights_per_batch = []
-    gradients_per_batch = []
+    epoch_gradients = []
 
     # Stuff for tracking metrics (loss, accuracy, etc)
     f_metrics = None
@@ -29,10 +30,6 @@ class Logger:
             if p.requires_grad and is_weight:
                 self.weight_layers.append(name)
 
-        ## Create csv files for storing tracked data
-        self.f_avg_gradients = open(f'{self.save_path}/avg_gradients.csv', 'a')
-        self.f_avg_gradients.write("batch," + ",".join(self.weight_layers) + '\n')
-
 
     def set_mode(self, mode):
         assert mode in ['val', 'train']
@@ -40,7 +37,6 @@ class Logger:
 
     ## DATA COLLECTION
     def add_metric(self, _name, item):
-
         prefix = "Validation " if self.mode == 'val' else "Train "
         name = f'{prefix}{_name}'
 
@@ -56,7 +52,7 @@ class Logger:
             if name in self.weight_layers
         ]
 
-        self.gradients_per_batch.append(grads)
+        self.epoch_gradients.append(grads)
 
     def collect_weights(self):
         weights = [
@@ -70,55 +66,65 @@ class Logger:
         self.collect_weights()
 
     def commit_epoch(self):
+        ## Flush mean of metric to csv file
         if not self.f_metrics:
-            self.f_metrics = open(f'{self.save_path}/metrics.csv', 'a')
+            self.f_metrics = open(f'{self.save_path}/metrics.csv', 'a+')
             self.f_metrics.write("epoch," + ",".join(self.epoch_metrics.keys()) + '\n')
 
-        ## Compute the mean of items and record as metric for that epoch
         line = [np.mean(items) for items in self.epoch_metrics.values()]
         self.f_metrics.write(f'{self.epoch},' + ','.join(map(str, line)) + '\n')
         self.f_metrics.flush()
 
+        ## Flush average gradients to csv file 
+        if not self.f_avg_gradients:
+            self.f_avg_gradients = open(f'{self.save_path}/avg_gradients.csv', 'a+')
+            self.f_avg_gradients.write("epoch,batch," + ",".join(self.weight_layers) + '\n')
+
+        averages_per_batch = [[layer_grads.mean().item() for layer_grads in batch_grads] for batch_grads in self.epoch_gradients]
+        for b, averages in enumerate(averages_per_batch):
+            self.f_avg_gradients.write(f'{self.epoch},{b},' + ",".join(map(str, averages)) + "\n")
+        self.f_avg_gradients.flush()
+
         ## Clear for next epoch
         self.epoch_metrics = {}
+        self.epoch_gradients = []
         self.epoch += 1
-
-    ## HELPERS
-    def get_avg_gradients_per_batch(self):
-        return [[layer_grads.mean().item() for layer_grads in batch_grads] for batch_grads in self.gradients_per_batch]
                 
     ## PLOTTERS
-    def plot_metrics(self, names, title=""):
-        plt.title(title)
+    def plot_metrics(self, title=""):
+        self.f_metrics.seek(0)
+        data = pandas.read_csv(self.f_metrics)
+        names = data.axes[1:]
 
+        plt.title(title)
         for name in names:
-            items = self.metrics[name]
+            items = data.get(name)
             epochs = list(range(len(items)))
             plt.plot(epochs, items, label=name)
 
-        if len(names) > 1:
-            plt.legend()
-
-        plt.savefig(f'{self.save_path}/{"-".join(names)}.png')
+        plt.legend()
+        plt.savefig(f'{self.save_path}/metrics.png')
         plt.close('all')  # Clear for future plotting
 
     def plot_gradient_flow(self, include_decoders = ['confidence', 'bounding_box', 'classes']):
+        self.f_avg_gradients.seek(0)
+        data = pandas.read_csv(self.f_avg_gradients)
+
         plt.xlabel("Layers")
         plt.ylabel("Avg. gradient")
         plt.title("Gradient flow")
         plt.grid(True)
         plt.figure(figsize=(10, 10), dpi=100)
         
-        weight_mask = [i for i, w in enumerate(self.weight_layers) if 'encoded' in w or w.split('.')[0] in include_decoders]
-        included_weights = [self.weight_layers[i].replace('.weight', '') for i in weight_mask]
+        weight_mask = [w for w in self.weight_layers if 'encoded' in w or w.split('.')[0] in include_decoders]
+        included_weights = [w.replace('.weight', '') for w in weight_mask]
         num_weights = len(included_weights)
         plt.hlines(0, 0, num_weights + 1, linewidth=1, color="k" )
         plt.xticks(range(0, num_weights), included_weights, rotation="vertical")
         plt.xlim(xmin=0, xmax=num_weights - 1)
 
-        for b, avg_grads in enumerate(self.get_avg_gradients_per_batch()):
-            included_avg_grads = [avg_grads[i] for i in weight_mask]
-            plt.plot(included_avg_grads, alpha=0.3, color="b")
+        for b, avg_grads in data.iterrows():
+            plt.plot(avg_grads[weight_mask], alpha=0.3, color="b")
         
         plt.savefig(f'{self.save_path}/gradient_flow_{"_".join(include_decoders)}.png')
         plt.close('all')  # Clear for future plotting
@@ -154,10 +160,3 @@ class Logger:
                   sd=gradient_std)
         plt.savefig(f'{self.save_path}/gradients_histogram{save_suffix}.png')
         plt.close('all')  # Clear for future plotting
-
-    ## CSV DUMPERS
-    def dump_avg_gradients_to_csv(self):
-        with open(f'{self.save_path}/avg_gradients.csv', "w") as csv:
-            averages_per_batch = self.get_avg_gradients_per_batch()
-            for b, averages in enumerate(averages_per_batch):
-                csv.write(f'{b},' + ",".join(map(str, averages)) + "\n")
