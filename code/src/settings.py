@@ -1,6 +1,7 @@
 import torch
 from torch.nn.functional import mse_loss, cross_entropy
 from base_model import BaseModel
+from batch_normalized_model import BatchNormalizedModel
 import torch.nn.functional as F
 from torchvision.ops import complete_box_iou_loss
 import math
@@ -166,7 +167,7 @@ def custom_loss_with_iou(input_batch,
 
 # Actual settings
 S = 2
-MODELS = {"base": BaseModel, "skipper": None}
+MODELS = {"base": BaseModel, "batch_normalized": BatchNormalizedModel, "skipper": None}
 LOSS_FUNCTIONS = {
     "mse": custom_mse,
     "custom_loss": custom_loss,
