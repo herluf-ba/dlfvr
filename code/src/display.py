@@ -55,11 +55,9 @@ def plot_img_vanilla(image, labels):
 def plot_img(image, predictions, conf_threshold=0):
     '''Plots a transformed image with labels'''
     channels, img_height, img_width = image.shape
-    print(f'{image.shape=}')
 
     fig, ax = plt.subplots()
     ax.imshow(image.numpy().transpose([1, 2, 0]), cmap='gray')
-    print(predictions)
 
     for x in range(predictions.shape[1]):
         for y in range(predictions.shape[2]):
@@ -74,7 +72,6 @@ def plot_img(image, predictions, conf_threshold=0):
             bottom = predictions[4][x][y] * img_height
             width = right - left
             height = bottom - top
-            print(f'{left=} {right=} {width=} {height=}')
 
             ax.add_patch(
                 patches.Rectangle((left, top),
