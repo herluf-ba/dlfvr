@@ -150,7 +150,12 @@ if __name__ == '__main__':
         predictions = model.forward(image)
 
         # Move back to cpu for plotting
-        predictions = predictions.cpu()
+        predictions = predictions
+        classes = batch_extract_classes(predictions)
+        confidence = batch_extract_confidence(predictions)
+        print(classes[0].softmax(dim=1).argmax(dim=1))
+        print(confidence[0].sigmoid())
+        
 
         # detach for numpy functions in libraries to work with tensors
-        plot_img(raw, predictions[0].detach(), conf_threshold=0.0)
+        plot_img(raw, predictions[0].cpu().detach(), conf_threshold=0.0)
