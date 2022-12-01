@@ -16,7 +16,7 @@ def metrics_from_cm(confusion_matrix):
 def plot_cm(cm, path):
     normalized_cm = cm / np.sum(cm)
     num_classes = len(cm)
-    fig, ax = plt.subplots(figsize=(min([num_classes-1, 2]), min([num_classes-1, 2])), dpi=100)
+    fig, ax = plt.subplots()
     ax.matshow(normalized_cm)
     for t in range(num_classes):
         for p in range(num_classes):
@@ -179,7 +179,6 @@ class Logger:
         val_classes_cm = np.zeros((10, 10))
         val_confidence_cm = np.zeros((2, 2))
         self.epoch += 1
-    
 
     ## PLOTTERS
     def plot_loss(self):
@@ -189,9 +188,9 @@ class Logger:
         val_items = np.array([data.get(n) for n in names if 'Validation' in n])
         train_items = np.array([data.get(n) for n in names if 'Train' in n])
         plt.title('Loss')
-        epochs = list(range(len(val_items)))
-        plt.plot(epochs, np.sum(train_items, axis=1), label='train')
-        plt.plot(epochs, np.sum(val_items, axis=1), label='validation')
+        epochs = list(range(1, len(val_items[0]) + 1))
+        plt.plot(epochs, np.sum(train_items, axis=0), label='train')
+        plt.plot(epochs, np.sum(val_items, axis=0), label='validation')
         plt.legend()
         plt.xlabel("epoch")
         plt.ylabel('loss')
@@ -205,7 +204,7 @@ class Logger:
         plt.title('Loss items')
         for name in names:
             items = data.get(name)
-            epochs = list(range(len(items)))
+            epochs = list(range(1, len(items) + 1))
             plt.plot(epochs, items, label=name)
 
         plt.legend()
