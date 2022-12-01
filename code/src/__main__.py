@@ -11,7 +11,7 @@ import numpy as np
 from svhn import SVHN, transform, target_transform
 from display import plot_img
 from training import fit
-from settings import S, MODELS, LOSS_FUNCTIONS, batch_extract_classes, batch_extract_confidence
+from settings import S, CONFIDENCE_THRESHOLD, MODELS, LOSS_FUNCTIONS, batch_extract_classes, batch_extract_confidence
 from logger import Logger
 
 if __name__ == '__main__':
@@ -148,9 +148,7 @@ if __name__ == '__main__':
         raw = read_image(predict_image_path)
         image = transform(raw).unsqueeze(dim=0).to(device)
         predictions = model.forward(image)
-
         # Move back to cpu for plotting
         predictions = predictions.cpu()
-
         # detach for numpy functions in libraries to work with tensors
-        plot_img(raw, predictions[0].detach(), conf_threshold=0.0)
+        plot_img(raw, predictions[0].detach(), conf_threshold=CONFIDENCE_THRESHOLD)
