@@ -174,10 +174,10 @@ class Logger:
         ## Clear for next epoch
         self.epoch_metrics = {}
         self.epoch_gradients = []
-        train_classes_cm = np.zeros((10, 10))
-        train_confidence_cm = np.zeros((2, 2))
-        val_classes_cm = np.zeros((10, 10))
-        val_confidence_cm = np.zeros((2, 2))
+        self.train_classes_cm = np.zeros((10, 10))
+        self.train_confidence_cm = np.zeros((2, 2))
+        self.val_classes_cm = np.zeros((10, 10))
+        self.val_confidence_cm = np.zeros((2, 2))
         self.epoch += 1
 
     ## PLOTTERS
@@ -221,7 +221,7 @@ class Logger:
         path = f'{self.save_path}/metrics/classes_accuracy.png'
         plot_accuracy(train, val, path)
 
-    def plot_confidence_accuracy(self, title=""):
+    def plot_confidence_accuracy(self):
         self.f_metrics.seek(0)
         data = pandas.read_csv(self.f_metrics)
         val = data.get("Validation confidence accuracy")
