@@ -14,20 +14,20 @@ class SVHN(Dataset):
 
     splits = {
         'default_test': {
-            'start': 30402,
+            'start': 26271,
             'end': 33402
         },
         'default_train': {
             'start': 0,
-            'end': 30401
+            'end': 26270
         },
         'develop_train': {
             'start': 0,
-            'end': 999
+            'end': 2000
         },
         'develop_test': {
-            'start': 1000,
-            'end': 1500
+            'start': 2001,
+            'end': 2401
         }
     }
 
