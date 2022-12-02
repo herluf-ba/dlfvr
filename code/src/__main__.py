@@ -15,6 +15,7 @@ from settings import S, CONFIDENCE_THRESHOLD, MODELS, LOSS_FUNCTIONS, batch_extr
 from logger import Logger
 
 if __name__ == '__main__':
+    torch.manual_seed(42) # Set seed for reproduceability 
     # Setup argument parser
     argparser = argparse.ArgumentParser(
         description='Model based on lab3 simple yolo implementation')
