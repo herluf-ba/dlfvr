@@ -53,25 +53,6 @@ def batch_extract_classes(tensor_batch):
     return extracted_classes.mT
 
 
-def batch_items_matches_shape(tensor, correct_shape):
-    tensor_shape = tensor.shape[1:] if is_batched(tensor) else tensor.shape
-    return tensor.shape == correct_shape
-
-
-def batch_transform_box_coordinates(boxes):
-    LEFT = 0
-    TOP = 1
-    WIDTH = 2
-    HEIGHT = 3
-    RIGHT = 2
-    BOTTOM = 3
-
-    boxes = torch.clamp(boxes, min=0.0)
-    boxes[:, RIGHT] = torch.add(boxes[:, LEFT], boxes[:, WIDTH])
-    boxes[:, BOTTOM] = torch.add(boxes[:, TOP], boxes[:, HEIGHT])
-    return boxes
-
-
 def custom_mse(input_batch,
                target_batch,
                size_average=None,
@@ -80,7 +61,7 @@ def custom_mse(input_batch,
                logger=None):
     loss = mse_loss(input_batch, target_batch, reduction=reduction)
     if logger:
-        logger.add_metric("MSE loss", loss.item())
+        logger.add_loss_item("mse", loss.item())
 
     return loss
 
@@ -114,9 +95,9 @@ def custom_loss(input_batch,
         input_conf, target_conf)  #, weight=confidence_weights)
 
     if logger:
-        logger.add_metric("Confidence", confidence_loss.item())
-        logger.add_metric("Bounding box", bb_loss.item())
-        logger.add_metric("Classes", classes_loss.item())
+        logger.add_loss_item("confidence", confidence_loss.item())
+        logger.add_loss_item("bounding box", bb_loss.item())
+        logger.add_loss_item("classes", classes_loss.item())
 
     return classes_loss + confidence_loss + bb_loss
 
@@ -150,24 +131,17 @@ def custom_loss_with_iou(input_batch,
         input_conf, target_conf)
 
     if logger:
-        logger.add_metric("Confidence", confidence_loss.item())
-        logger.add_metric("Bounding box", bb_loss.item())
-        logger.add_metric("Classes", classes_loss.item())
-
-    contains_nan = lambda x: x.isnan().any()
-    if (contains_nan(classes_loss) or contains_nan(bb_loss)
-            or contains_nan(confidence_loss)):
-        print('----')
-        print(f'{classes_loss.item()=}')
-        print(f'{bb_loss.item()=}')
-        print(f'{confidence_loss.item()=}')
+        logger.add_loss_item("confidence", confidence_loss.item())
+        logger.add_loss_item("bounding box", bb_loss.item())
+        logger.add_loss_item("classes", classes_loss.item())
 
     return classes_loss + bb_loss + confidence_loss
 
 
 # Actual settings
 S = 2
-MODELS = {"base": BaseModel, "batch_normalized": BatchNormalizedModel, "skipper": None}
+CONFIDENCE_THRESHOLD = 0.9
+MODELS = {"base": BaseModel, "batch_normalized": BatchNormalizedModel}
 LOSS_FUNCTIONS = {
     "mse": custom_mse,
     "custom_loss": custom_loss,
