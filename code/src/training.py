@@ -39,7 +39,7 @@ def score_batch(model,
     return loss.item(), len(xb)
 
 
-def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device, logger):
+def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device, logger, lr_scheduler=None):
     batch_count = len(train_dl)
     batch_count_val = len(valid_dl)
 
@@ -51,6 +51,10 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device, logger):
             printProgressBar(batch_i, batch_count, prefix=epoch_prefix)
             score_batch(model, loss_func, xb.to(device), yb.to(device), opt, logger=logger, collect_gradients=True)
         printProgressBar(batch_count, batch_count, prefix=epoch_prefix)
+        
+        # Step LR scheduler at end of epoch
+        if lr_scheduler is not None: 
+            lr_scheduler.step()
 
         ## CALCULATION LOSS
         model.eval()

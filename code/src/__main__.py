@@ -72,7 +72,13 @@ if __name__ == '__main__':
         '-wi',
         "--weight-init",
         default=None,
-        help="The method used for initializing weight of parametized layers")
+        help="The method used for initializing weight of parametized layers"),
+    argparser.add_argument(
+        '-lrs', 
+        '--learning-rate-scheduler', 
+        help = "The learning rate scheduler to use for training.",
+        default=None
+    )
 
     args = argparser.parse_args()
 
@@ -95,14 +101,15 @@ if __name__ == '__main__':
         batch_size = int(args.batch_size)
         epochs = int(args.epochs)
         split = args.split
-
+        lrs = args.learning_rate_scheduler
         loss_func = LOSS_FUNCTIONS[
             args.
-            loss_func]  #Hardcoded this while testing. Circular import bullshittery.
+            loss_func]
+
 
         print("Training on device:", device)
         print(
-            f"{learning_rate=}\n{momentum=}\n{batch_size=}\n{epochs=}\nloss_func={args.loss_func}"
+            f"{learning_rate=}\n{momentum=}\n{batch_size=}\n{epochs=}\nloss_func={args.loss_func}\nlearning_rate_scheduler={lrs}"
         )
 
         train_split, test_split = (f'{split}_train', f'{split}_test')
@@ -124,8 +131,16 @@ if __name__ == '__main__':
                               lr=learning_rate,
                               momentum=momentum)
 
+        # Setup learning rate scheduler 
+        scheduler = None 
+        assert lrs in ['step_lr', 'cos_wr', None]
+        if (lrs == 'step_lr'): 
+            scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=1, gamma=0.95) # TODO find argument for gamma 
+        elif (lrs == 'cos_wr'):
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, T_0=3) #TODO: find argument for T_0
+
         # Find path to save artifacts of training to
-        fingerprint = f'{args.model}-{args.loss_func}-{split}-e_{epochs}-bs_{batch_size}-mom_{momentum}-lr_{learning_rate}-wi_{args.weight_init}'
+        fingerprint = f'{args.model}-{args.loss_func}-{split}-e_{epochs}-bs_{batch_size}-mom_{momentum}-lr_{learning_rate}-wi_{args.weight_init}-lrs_{lrs}'
         save_path = f'runs/{fingerprint}'
         i = 0
         while os.path.exists(save_path):
@@ -135,7 +150,7 @@ if __name__ == '__main__':
         os.mkdir(f'{save_path}/weights')
 
         logger = Logger(save_path, model)
-        fit(model, epochs, loss_func, opt, train, test, device, logger)
+        fit(model, epochs, loss_func, opt, train, test, device, logger, lr_scheduler=scheduler)
 
         ## Save trained model
         if (args.save):
