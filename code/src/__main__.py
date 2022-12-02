@@ -124,7 +124,7 @@ if __name__ == '__main__':
                               momentum=momentum)
 
         # Find path to save artifacts of training to
-        fingerprint = f'{args.loss_func}-{split}-e_{epochs}-bs_{batch_size}-mom_{momentum}-lr_{learning_rate}-wi_{args.weight_init}'
+        fingerprint = f'{args.model}-{args.loss_func}-{split}-e_{epochs}-bs_{batch_size}-mom_{momentum}-lr_{learning_rate}-wi_{args.weight_init}'
         save_path = f'runs/{fingerprint}'
         i = 0
         while os.path.exists(save_path):
