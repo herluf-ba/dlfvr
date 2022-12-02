@@ -3,7 +3,7 @@ import torch.nn as nn
 import inspect
 import numpy as np
 from display import printProgressBar, bcolors
-from settings import batch_extract_classes
+from settings import CONFIDENCE_THRESHOLD, batch_extract_classes, batch_extract_confidence
 
 def score_batch(model,
                 loss_func,
@@ -12,7 +12,8 @@ def score_batch(model,
                 opt=None,
                 logger=None,
                 compute_metrics=False,
-                should_collect_model_data=False):
+                collect_gradients=False):
+
     prediction = model.forward(xb)
     loss = loss_func(prediction,
                      yb,
@@ -20,23 +21,20 @@ def score_batch(model,
 
     if opt is not None:
         loss.backward()
-        if should_collect_model_data:
-            # Collect weights and gradients for all weight layers right after each backward pass
-            logger.collect_model_data()
-
+        if collect_gradients:
+            logger.collect_gradients()
         opt.step()
         opt.zero_grad()
 
     if compute_metrics:
-        # Compute accuracy for classes
-        target_classes = batch_extract_classes(yb)
-        pred_classes = batch_extract_classes(prediction)
-        true_positives = target_classes.argmax(axis=2) == pred_classes.argmax(
-            axis=2)
-        accuracy = true_positives.mean(dtype=t.float)
-        logger.add_metric("accuracy", accuracy.cpu())
-
-        ## TODO Compute accuracy for confidence
+        t_conf = batch_extract_confidence(yb)
+        t_classes = batch_extract_classes(yb)
+        p_conf = batch_extract_confidence(prediction)
+        p_classes = batch_extract_classes(prediction)
+        conf_filter = t_conf > 0
+        
+        logger.collect_classes_metrics(t_classes[conf_filter], p_classes[conf_filter])
+        logger.collect_confidence_metrics(t_conf, p_conf > CONFIDENCE_THRESHOLD)
 
     return loss.item(), len(xb)
 
@@ -45,47 +43,34 @@ def fit(model, epochs, loss_func, opt, train_dl, valid_dl, device, logger):
     batch_count = len(train_dl)
     batch_count_val = len(valid_dl)
 
-    ## TRAINING
     for epoch in range(epochs):
         epoch_prefix = f"Epoch: {epoch + 1} / {epochs}"
+        ## TRAINING
         model.train()
         for batch_i, (xb, yb) in enumerate(train_dl):
             printProgressBar(batch_i, batch_count, prefix=epoch_prefix)
-            xb, yb = xb.to(device), yb.to(device)
-            score_batch(model,
-                        loss_func,
-                        xb,
-                        yb,
-                        opt,
-                        logger=logger,
-                        should_collect_model_data=True)
-
+            score_batch(model, loss_func, xb.to(device), yb.to(device), opt, logger=logger, collect_gradients=True)
         printProgressBar(batch_count, batch_count, prefix=epoch_prefix)
 
         ## CALCULATION LOSS
         model.eval()
         with t.no_grad():
+            # VALIDATION LOSS
             logger.set_mode('val')
             for b, (xb, yb) in enumerate(valid_dl):
                 printProgressBar(b, batch_count_val, prefix='Val loss ', barColor=bcolors.OKCYAN)
                 score_batch(model, loss_func, xb.to(device), yb.to(device), logger=logger, compute_metrics=True)
             printProgressBar(batch_count_val, batch_count_val, prefix='Val loss ', barColor=bcolors.OKCYAN)
             
+            # TRAINING LOSS
             logger.set_mode('train')
             for b, (xb, yb) in enumerate(train_dl):
                 printProgressBar(b, batch_count, prefix='Train loss ', barColor=bcolors.WARNING)
                 score_batch(model, loss_func, xb.to(device), yb.to(device), logger=logger, compute_metrics=True)
             printProgressBar(batch_count, batch_count, prefix='Train loss ', barColor=bcolors.WARNING)
 
-
-        # Save epoch log data to logger history
+        # Save epoch log data to logger history and save model weights
         logger.commit_epoch()
-        ## Save model 
         t.save(model.state_dict(), f'{logger.save_path}/weights/{epoch}')
 
-        ## PLOT PROGRESS
-        logger.plot_gradient_flow(include_decoders=['confidence'])
-        logger.plot_gradient_flow(include_decoders=['bounding_box'])
-        logger.plot_gradient_flow(include_decoders=['classes'])
-        logger.plot_metrics(title=f'Loss over {epoch + 1} epochs')
 
