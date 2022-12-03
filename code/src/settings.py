@@ -23,7 +23,7 @@ def batch_extract(tensor_batch, indicies):
 
     indicies = torch.tensor(indicies).to(device)
     extracted_tensor = torch.index_select(tensor_batch, 1, indicies)
-    extracted_tensor = extracted_tensor.reshape(-1, S * S, S * S)
+    extracted_tensor = extracted_tensor.reshape(-1, S * S, 4)
     return extracted_tensor.mT
 
 
@@ -139,7 +139,7 @@ def custom_loss_with_iou(input_batch,
 
 
 # Actual settings
-S = 2
+S = 4
 CONFIDENCE_THRESHOLD = 0.9
 MODELS = {"base": BaseModel, "batch_normalized": BatchNormalizedModel}
 LOSS_FUNCTIONS = {
