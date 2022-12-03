@@ -2,7 +2,7 @@ import os
 import pandas
 import numpy as np
 import matplotlib.pyplot as plt
-from torchvision.ops import complete_box_iou_loss
+from torchvision.ops import box_iou
 from settings import batch_extract_bounding_box, batch_extract_confidence
 import torch as t
 
@@ -118,7 +118,7 @@ class Logger:
             target_bb = batch_extract_bounding_box(target_batch)[conf_filter]
             input_bb = batch_extract_bounding_box(input_batch)[conf_filter]
 
-        bb_iou_metric = complete_box_iou_loss(input_bb, target_bb, reduction='mean').item()
+        bb_iou_metric = box_iou(input_bb, target_bb, reduction='mean').item()
         self.add_loss_item("bounding box iou", bb_iou_metric, suffix='') # Kinda hacky - but i've lost overview of this thingy. It works. Too bad. 
 
     def add_loss_item(self, _name, item, suffix=' loss'):
