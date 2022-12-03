@@ -2,6 +2,10 @@ import os
 import pandas
 import numpy as np
 import matplotlib.pyplot as plt
+from torchvision.ops import complete_box_iou_loss
+from settings import batch_extract_bounding_box, batch_extract_confidence
+import torch as t
+
 
 def metrics_from_cm(confusion_matrix):
     tp = np.diagonal(confusion_matrix).sum() # sum of diagonal
@@ -106,6 +110,17 @@ class Logger:
         self.mode = mode
 
     ## DATA COLLECTION
+    def add_bounding_box_iou_metric(self, input_batch, target_batch): 
+        with t.no_grad(): 
+            target_conf = batch_extract_confidence(target_batch)
+            conf_filter = target_conf > 0
+
+            target_bb = batch_extract_bounding_box(target_batch)[conf_filter]
+            input_bb = batch_extract_bounding_box(input_batch)[conf_filter]
+
+        bb_iou_metric = complete_box_iou_loss(input_bb, target_bb, reduction='mean').item()
+        self.add_loss_item("bounding box iou", bb_iou_metric, suffix='') # Kinda hacky - but i've lost overview of this thingy. It works. Too bad. 
+
     def add_loss_item(self, _name, item, suffix=' loss'):
         prefix = "Validation " if self.mode == 'val' else "Train "
         name = f'{prefix}{_name}{suffix}'
