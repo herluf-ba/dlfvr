@@ -34,11 +34,11 @@ def plot_cm(cm, path):
     plt.savefig(path)
     plt.close('all')  # Clear for future plotting
 
-def plot_accuracy(train, val, path):
+def plot_accuracy(train, val, path, title="Accuracy"):
     epochs = list(range(1, len(val) + 1))
     plt.plot(epochs, val, label='validation')
     plt.plot(epochs, train, label='train')
-    plt.title("Accuracy")
+    plt.title(title)
     plt.legend()
     plt.xlabel("epoch")
     plt.ylabel('accuracy')
@@ -106,9 +106,9 @@ class Logger:
         self.mode = mode
 
     ## DATA COLLECTION
-    def add_loss_item(self, _name, item):
+    def add_loss_item(self, _name, item, suffix=' loss'):
         prefix = "Validation " if self.mode == 'val' else "Train "
-        name = f'{prefix}{_name} loss'
+        name = f'{prefix}{_name}{suffix}'
         if name in self.epoch_metrics.keys():
             self.epoch_metrics[name] = np.append(self.epoch_metrics[name], item)
         else:
@@ -165,6 +165,7 @@ class Logger:
         self.plot_confidence_cm()
         self.plot_classes_accuracy()
         self.plot_confidence_accuracy()
+        self.plot_bounding_box_intersection_over_union()
         self.plot_loss()
         self.plot_loss_items()
         self.plot_gradient_flow(include_decoders=['confidence'])
@@ -219,7 +220,7 @@ class Logger:
         val = data.get('Validation classes accuracy')
         train = data.get("Train classes accuracy")
         path = f'{self.save_path}/metrics/classes_accuracy.png'
-        plot_accuracy(train, val, path)
+        plot_accuracy(train, val, path, title="Classes accuracy")
 
     def plot_confidence_accuracy(self):
         self.f_metrics.seek(0)
@@ -227,7 +228,16 @@ class Logger:
         val = data.get("Validation confidence accuracy")
         train = data.get("Train confidence accuracy")
         path = f'{self.save_path}/metrics/confidence_accuracy.png'
-        plot_accuracy(train, val, path)
+        plot_accuracy(train, val, path, title="Confidence accuracy")
+
+    def plot_bounding_box_intersection_over_union(self):
+        self.f_metrics.seek(0)
+        data = pandas.read_csv(self.f_metrics)
+        val = data.get("Validation bounding box iou")
+        train = data.get("Train bounding box iou")
+        path = f'{self.save_path}/metrics/bounding_box_intersection_over_union.png'
+        plot_accuracy(train, val, path, title="Bounding box intersection over union")
+
 
     def plot_classes_cm(self):
         plot_cm(self.train_classes_cm, f'{self.save_path}/classes_confusion_matricies/train_e{self.epoch}.png')

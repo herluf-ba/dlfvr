@@ -17,16 +17,6 @@ class attribute:
     CLASSES = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
 
-def batch_extract(tensor_batch, indicies):
-    device = torch.device(
-        'cuda') if torch.cuda.is_available() else torch.device('cpu')
-
-    indicies = torch.tensor(indicies).to(device)
-    extracted_tensor = torch.index_select(tensor_batch, 1, indicies)
-    extracted_tensor = extracted_tensor.reshape(-1, S * S, 4)
-    return extracted_tensor.mT
-
-
 def batch_extract_confidence(tensor_batch):
     device = torch.device(
         'cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -38,9 +28,14 @@ def batch_extract_confidence(tensor_batch):
 
 
 def batch_extract_bounding_box(tensor_batch):
-    return batch_extract(
-        tensor_batch,
-        [attribute.LEFT, attribute.TOP, attribute.WIDTH, attribute.HEIGHT])
+    device = torch.device(
+        'cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+    indicies = [attribute.LEFT, attribute.TOP, attribute.WIDTH, attribute.HEIGHT]
+    indicies = torch.tensor(indicies).to(device)
+    extracted_tensor = torch.index_select(tensor_batch, 1, indicies)
+    extracted_tensor = extracted_tensor.reshape(-1, 4, S * S)
+    return extracted_tensor.mT
 
 
 def batch_extract_classes(tensor_batch):
@@ -52,6 +47,16 @@ def batch_extract_classes(tensor_batch):
     extracted_classes = extracted_classes.reshape(-1, 10, S * S)
     return extracted_classes.mT
 
+def get_iou_metric(input_batch, target_batch):
+    with torch.no_grad(): 
+        target_conf = batch_extract_confidence(target_batch)
+        conf_filter = target_conf > 0
+
+        target_bb = batch_extract_bounding_box(target_batch)[conf_filter]
+        input_bb = batch_extract_bounding_box(input_batch)[conf_filter]
+
+        return complete_box_iou_loss(input_bb, target_bb, reduction='mean').item()
+
 
 def custom_mse(input_batch,
                target_batch,
@@ -59,9 +64,13 @@ def custom_mse(input_batch,
                reduce=None,
                reduction="mean",
                logger=None):
+
     loss = mse_loss(input_batch, target_batch, reduction=reduction)
     if logger:
+        print(loss)
         logger.add_loss_item("mse", loss.item())
+        bb_iou_metric = get_iou_metric(input_batch, target_batch)
+        logger.add_loss_item("bounding box iou", bb_iou_metric, suffix='')
 
     return loss
 
@@ -124,7 +133,7 @@ def custom_loss_with_iou(input_batch,
 
     target_bb = target_bb[conf_filter]
     input_bb = input_bb[conf_filter]
-
+    
     classes_loss = F.cross_entropy(input_classes, target_classes)
     bb_loss = complete_box_iou_loss(input_bb, target_bb, reduction='mean')
     confidence_loss = F.binary_cross_entropy_with_logits(

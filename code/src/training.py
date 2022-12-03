@@ -3,7 +3,7 @@ import torch.nn as nn
 import inspect
 import numpy as np
 from display import printProgressBar, bcolors
-from settings import CONFIDENCE_THRESHOLD, batch_extract_classes, batch_extract_confidence
+from settings import CONFIDENCE_THRESHOLD, batch_extract_classes, batch_extract_confidence, batch_extract_bounding_box
 
 def score_batch(model,
                 loss_func,
@@ -29,12 +29,16 @@ def score_batch(model,
     if compute_metrics:
         t_conf = batch_extract_confidence(yb)
         t_classes = batch_extract_classes(yb)
+        t_bounding_boxes = batch_extract_bounding_box(yb)
+
         p_conf = batch_extract_confidence(prediction)
         p_classes = batch_extract_classes(prediction)
+        p_bounding_boxes = batch_extract_bounding_box(prediction)
         conf_filter = t_conf > 0
         
         logger.collect_classes_metrics(t_classes[conf_filter], p_classes[conf_filter])
         logger.collect_confidence_metrics(t_conf, p_conf > CONFIDENCE_THRESHOLD)
+        #logger.collect_bounding_box_metrics(t_bounding_boxes, p_bounding_boxes)
 
     return loss.item(), len(xb)
 
