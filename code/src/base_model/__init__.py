@@ -57,7 +57,7 @@ class BaseModel(nn.Module):
             nn.Conv2d(in_channels=4,
                       out_channels=4,
                       kernel_size=1,
-                      padding="same"), nn.ReLU())
+                      padding="same"))
 
         # classes: for each cell predict class present in cell
         self.classes = nn.Sequential(

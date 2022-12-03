@@ -30,12 +30,9 @@ def batch_extract_confidence(tensor_batch):
 def batch_extract_bounding_box(tensor_batch):
     device = torch.device(
         'cuda') if torch.cuda.is_available() else torch.device('cpu')
-
-    indicies = [attribute.LEFT, attribute.TOP, attribute.WIDTH, attribute.HEIGHT]
-    indicies = torch.tensor(indicies).to(device)
+    indicies = torch.tensor([attribute.LEFT, attribute.TOP, attribute.WIDTH, attribute.HEIGHT]).to(device)
     extracted_tensor = torch.index_select(tensor_batch, 1, indicies)
-    extracted_tensor = extracted_tensor.reshape(-1, 4, S * S)
-    return extracted_tensor.mT
+    return extracted_tensor.reshape(-1, 4, S * S).mT
 
 
 def batch_extract_classes(tensor_batch):
@@ -128,6 +125,9 @@ def custom_loss_with_iou(input_batch,
     confidence_loss = F.binary_cross_entropy_with_logits(
         input_conf, target_conf)
 
+    assert not bb_loss.isnan(), 'Something went wrong: bb_loss is nan.'
+
+    
     if logger:
         logger.add_loss_item("confidence", confidence_loss.item())
         logger.add_loss_item("bounding box", bb_loss.item())
