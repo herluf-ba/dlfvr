@@ -118,7 +118,11 @@ class Logger:
             target_bb = batch_extract_bounding_box(target_batch)[conf_filter]
             input_bb = batch_extract_bounding_box(input_batch)[conf_filter]
 
-        bb_iou_metric = box_iou(input_bb, target_bb, reduction='mean').item()
+        # Calculation is pairwise -> extract diagonal
+        bb_iou_metric = box_iou(input_bb, target_bb)\
+                .diagonal()\
+                .mean()\
+                .item()
         self.add_loss_item("bounding box iou", bb_iou_metric, suffix='') # Kinda hacky - but i've lost overview of this thingy. It works. Too bad. 
 
     def add_loss_item(self, _name, item, suffix=' loss'):
