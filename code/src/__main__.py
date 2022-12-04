@@ -42,7 +42,7 @@ if __name__ == '__main__':
     argparser.add_argument("-bs",
                            "--batch-size",
                            help="Batch size to use when training",
-                           default=64)
+                           default=32)
     argparser.add_argument("-lr",
                            "--learning-rate",
                            help="Learning rate to use when training",
