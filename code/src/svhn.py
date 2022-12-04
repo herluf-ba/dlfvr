@@ -23,11 +23,11 @@ class SVHN(Dataset):
         },
         'develop_train': {
             'start': 0,
-            'end': 2000
+            'end': 2627
         },
         'develop_test': {
-            'start': 2001,
-            'end': 2401
+            'start': 2628,
+            'end': 3153
         }
     }
 
