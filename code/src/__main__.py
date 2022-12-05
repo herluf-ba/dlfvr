@@ -51,7 +51,7 @@ if __name__ == '__main__':
         "-mom",
         "--momentum",
         help="Momentum to use when training using gradient descent",
-        default=0.9)
+        default=0.0)
     argparser.add_argument("-p", "--predict", help="Predict a single image")
     argparser.add_argument('-t',
                            "--train",

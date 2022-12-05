@@ -138,8 +138,8 @@ def custom_loss_with_iou(input_batch,
 
 
 # Actual settings
-S = 4
-CONFIDENCE_THRESHOLD = 0.9
+S = 2
+CONFIDENCE_THRESHOLD = 0.51
 MODELS = {"base": BaseModel, "batch_normalized": BatchNormalizedModel}
 LOSS_FUNCTIONS = {
     "mse": custom_mse,
