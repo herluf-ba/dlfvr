@@ -83,14 +83,18 @@ class BaseModel(nn.Module):
         # Initialize weights 
         if (weight_init is not None):
             layers_initialized = 0
-            assert weight_init in ['kaiming_uniform'], f'Unknown weight init {weight_init}'
+            assert weight_init in ['kaiming_uniform', 'kaiming_normal'], f'Unknown weight init {weight_init}'
             models = [self.encoded, self.classes, self.confidence, self.bounding_box]
             for model in models:
                 for layer in model:
                     is_conv_layer = isinstance(layer, nn.Conv2d)
-                    if is_conv_layer and weight_init == 'kaiming_uniform': 
+                    if is_conv_layer:  
                             layers_initialized += 1
+
+                    if is_conv_layer and weight_init == 'kaiming_uniform': 
                             nn.init.kaiming_uniform_(layer.weight, nonlinearity='relu')
+                    elif is_conv_layer and weight_init == 'kaiming_normal': 
+                            nn.init.kaiming_normal_(layer.weight, mode='fan_out', nonlinearity='relu')
             print(f'Initialized {layers_initialized} layers using {weight_init}')
 
     def forward(self, x):
