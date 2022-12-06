@@ -127,13 +127,16 @@ def custom_loss_with_iou(input_batch,
 
     assert not bb_loss.isnan(), 'Something went wrong: bb_loss is nan.'
 
+    # Scale losses to bring them to similar range as classes_loss
+    bb_loss *= 2; 
+    confidence_loss *= 8; 
     
     if logger:
         logger.add_loss_item("confidence", confidence_loss.item())
         logger.add_loss_item("bounding box", bb_loss.item())
         logger.add_loss_item("classes", classes_loss.item())
         logger.add_bounding_box_iou_metric(input_batch, target_batch)
-
+    
     return classes_loss + bb_loss + confidence_loss
 
 
