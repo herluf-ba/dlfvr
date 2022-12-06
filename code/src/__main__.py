@@ -78,7 +78,10 @@ if __name__ == '__main__':
         '--learning-rate-scheduler', 
         help = "The learning rate scheduler to use for training.",
         default=None
-    )
+    ), 
+    argparser.add_argument(
+            '--use-layer-specific-learning-rates', 
+            help = 'Will set the learning rate of the bounding box decoder to 0.00043 and use the learning rate provided by -lr for the remaining', action="store_true")
 
     args = argparser.parse_args()
 
@@ -127,7 +130,20 @@ if __name__ == '__main__':
         test = DataLoader(svhn_test)
 
         # Train model
-        opt = torch.optim.SGD(model.parameters(),
+        model_params = None 
+        if args.use_layer_specific_learning_rates: 
+            bounding_box_learning_rate = 0.00043
+            print(f'{bounding_box_learning_rate=}')
+            model_params = [
+                    {"params": model.encoded.parameters() }, 
+                    {"params": model.confidence.parameters()}, 
+                    {"params": model.classes.parameters()}, 
+                    {"params": model.bounding_box.parameters(), 'lr': bounding_box_learning_rate}
+            ]
+        else: 
+            model_params = model.parameters()
+
+        opt = torch.optim.SGD(model_params,
                               lr=learning_rate,
                               momentum=momentum)
 
@@ -137,10 +153,10 @@ if __name__ == '__main__':
         if (lrs == 'step_lr'): 
             scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=1, gamma=0.95) # TODO find argument for gamma 
         elif (lrs == 'cos_wr'):
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, T_0=3) #TODO: find argument for T_0
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, T_0=5) #TODO: find argument for T_0
 
         # Find path to save artifacts of training to
-        fingerprint = f'{args.model}-{args.loss_func}-{split}-e_{epochs}-bs_{batch_size}-mom_{momentum}-lr_{learning_rate}-wi_{args.weight_init}-lrs_{lrs}'
+        fingerprint = f'{args.model}-{args.loss_func}-{split}-e_{epochs}-bs_{batch_size}-mom_{momentum}-lr_{learning_rate}-wi_{args.weight_init}-lrs_{lrs}_lslr-{args.use_layer_specific_learning_rates}'
         save_path = f'runs/{fingerprint}'
         i = 0
         while os.path.exists(save_path):
@@ -168,10 +184,9 @@ if __name__ == '__main__':
         predictions = predictions
         classes = batch_extract_classes(predictions)
         confidence = batch_extract_confidence(predictions)
-        print(classes[0].softmax(dim=1).argmax(dim=1))
-        print(confidence[0].sigmoid())
+        #print(classes[0].softmax(dim=1).argmax(dim=1))
+        #print(confidence[0].sigmoid())
         
-
         # detach for numpy functions in libraries to work with tensors
         plot_img(raw, predictions[0].cpu().detach(), conf_threshold=CONFIDENCE_THRESHOLD)
 
