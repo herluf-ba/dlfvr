@@ -81,7 +81,14 @@ if __name__ == '__main__':
     ), 
     argparser.add_argument(
             '--use-layer-specific-learning-rates', 
-            help = 'Will set the learning rate of the bounding box decoder to 0.00043 and use the learning rate provided by -lr for the remaining', action="store_true")
+            help = 'Will set the learning rate of the bounding box decoder to 0.00043 and use the learning rate provided by -lr for the remaining', 
+            action="store_true"),
+    argparser.add_argument(
+            '-a', 
+            '--use-adam', 
+            help = "Will change the optimizer from SGD to ADAM.",
+            action="store_false"
+            )
 
     args = argparser.parse_args()
 
@@ -129,7 +136,7 @@ if __name__ == '__main__':
         train = DataLoader(svhn_train, batch_size=batch_size)
         test = DataLoader(svhn_test)
 
-        # Train model
+        # Get model params
         model_params = None 
         if args.use_layer_specific_learning_rates: 
             bounding_box_learning_rate = 0.00043
@@ -143,13 +150,20 @@ if __name__ == '__main__':
         else: 
             model_params = model.parameters()
 
-        opt = torch.optim.SGD(model_params,
-                              lr=learning_rate,
-                              momentum=momentum)
+        # Choose between ADAM or SGD
+        opt = None
+        if args.use_adam: 
+            print('Optimizer=Adam')
+            opt = torch.optim.Adam(model_params, lr=learning_rate)
+        else:
+            print('Optimizer=SGD')
+            opt = torch.optim.SGD(model_params,
+                                  lr=learning_rate,
+                                  momentum=momentum)
 
-        # Setup learning rate scheduler 
+        # Setup learning rate scheduler (None ended up being used for experiments anyways)
         scheduler = None 
-        assert lrs in ['step_lr', 'cos_wr', None]
+        assert lrs in ['step_lr', 'cos_wr', None], "Invalid learning rate scheduler. Should be one of: 'step_lr' or 'cos_wr' "
         if (lrs == 'step_lr'): 
             scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=1, gamma=0.95) # TODO find argument for gamma 
         elif (lrs == 'cos_wr'):
@@ -165,6 +179,7 @@ if __name__ == '__main__':
         os.mkdir(save_path)
         os.mkdir(f'{save_path}/weights')
 
+        # Setup logger & begin training!
         logger = Logger(save_path, model)
         fit(model, epochs, loss_func, opt, train, test, device, logger, lr_scheduler=scheduler)
 
