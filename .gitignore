@@ -16,7 +16,6 @@ code/datasets/train/*.m
 code/datasets/test/*.m
 code/datasets/train/*.mat
 code/datasets/test/*.mat
-*.png
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
